@@ -47,6 +47,17 @@ export function LoginForm({
     }
   };
 
+  const handleGoogleLogin = async () => {
+    const supabase = createClient();
+
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -101,6 +112,13 @@ export function LoginForm({
               >
                 Sign up
               </Link>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleLogin}
+              >
+                Continue with Google
+              </Button>
             </div>
           </form>
         </CardContent>
