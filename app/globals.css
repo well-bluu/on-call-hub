@@ -29,6 +29,7 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --signup-button: #0050d3;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -56,6 +57,10 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+}
+
+@theme inline {
+  --color-signup-button: var(--signup-button);
 }
 
 @layer base {
