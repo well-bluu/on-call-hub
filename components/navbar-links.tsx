@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Clock, Users, Bell, HelpCircle } from "lucide-react";
-
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Users,
+  Bell,
+  HelpCircle,
+} from "lucide-react";
 export function NavbarLinks() {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
@@ -15,11 +20,11 @@ export function NavbarLinks() {
     "text-white border-white hover:text-[hsl(var(--dark-blue))] hover:bg-white";
 
   const links = [
-    { href: "/dashboard", label: "DASHBOARD", icon: House },
+    { href: "/dashboard", label: "DASHBOARD", icon: LayoutDashboard },
     {
       href: "/shift_management",
       label: "SHIFT MANAGEMENT",
-      icon: Clock,
+      icon: CalendarDays,
     },
     { href: "/workers", label: "WORKERS", icon: Users },
     { href: "/notifications", label: "NOTIFICATIONS", icon: Bell },
