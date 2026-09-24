@@ -15,6 +15,9 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
+
+import google from "@/components/assets/images/google-logo.png";
 
 export function LoginForm({
   className,
@@ -116,14 +119,16 @@ export function LoginForm({
                 </Button>
                 <div className="flex items-center my-4">
                   <div className="flex-grow border-t border-gray-300" />
-                  <span className="mx-4 text-sm text-gray-500">Or</span>
+                  <span className="mx-4 text-sm text-gray-500">or</span>
                   <div className="flex-grow border-t border-gray-300" />
                 </div>
                 <Button
                   type="button"
                   variant="outline"
+                  className="font-bold"
                   onClick={handleGoogleLogin}
                 >
+                  <Image src={google} width={"20"} height={"20"} alt={""} />
                   Continue with Google
                 </Button>
               </div>
@@ -133,7 +138,7 @@ export function LoginForm({
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/sign-up"
-                className="underline underline-offset-4"
+                className="font-bold hover:underline underline-offset-4"
               >
                 Sign up
               </Link>

@@ -15,11 +15,18 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
+
+import google from "@/components/assets/images/google-logo.png";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  //Please Check
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -67,14 +74,36 @@ export function SignUpForm({
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Enter your Full Name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="Enter your email address"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter username"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -84,6 +113,7 @@ export function SignUpForm({
                 <Input
                   id="password"
                   type="password"
+                  placeholder="Enter Password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -91,20 +121,37 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <Label htmlFor="repeat-password">Confirm Password</Label>
                 </div>
                 <Input
                   id="repeat-password"
                   type="password"
+                  placeholder="Confirm Password"
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="submit"
+                  className="w-full bg-[var(--signup-button)] hover:bg-[#003da6]"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating an account..." : "Sign up"}
+                </Button>
+
+                <div className="flex items-center my-4">
+                  <div className="flex-grow border-t border-gray-300" />
+                  <span className="mx-4 text-sm text-gray-500">or</span>
+                  <div className="flex-grow border-t border-gray-300" />
+                </div>
+                <Button type="button" variant="outline" className="font-bold">
+                  <Image src={google} width={"20"} height={"20"} alt={""} />
+                  Continue with Google
+                </Button>
+              </div>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
