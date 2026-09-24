@@ -133,6 +133,17 @@ export function SignUpForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
+              <p className="text-xs text-center">
+                I agree to the{" "}
+                <a href="" className="font-bold underline hover:cursor-pointer">
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="" className="font-bold underline hover:cursor-pointer">
+                  {" "}
+                  Privacy Policy
+                </a>
+              </p>
               <div className="flex flex-col gap-2">
                 <Button
                   type="submit"
