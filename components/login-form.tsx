@@ -111,7 +111,7 @@ export function LoginForm({
               {error && <p className="text-sm text-red-500">{error}</p>}
               <div className="flex flex-col gap-2">
                 <Button
-                  type="button"
+                  type="submit"
                   className="w-full bg-[var(--signup-button)] hover:bg-[#003da6]"
                   disabled={isLoading}
                 >
