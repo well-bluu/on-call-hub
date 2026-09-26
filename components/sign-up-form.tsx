@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -24,8 +25,9 @@ export function SignUpForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   //Please Check
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,14 +76,25 @@ export function SignUpForm({
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
-                  id="name"
+                  id="firstName"
                   type="text"
-                  placeholder="Enter your Full Name"
+                  placeholder="Enter your First Name"
                   required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Enter your Last Name"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -96,14 +109,14 @@ export function SignUpForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
                 <Input
-                  id="username"
+                  id="phoneNumber"
                   type="text"
-                  placeholder="Enter username"
+                  placeholder="Enter phone number"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -133,17 +146,25 @@ export function SignUpForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <p className="text-xs text-center">
-                I agree to the{" "}
-                <a href="" className="font-bold underline hover:cursor-pointer">
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a href="" className="font-bold underline hover:cursor-pointer">
-                  {" "}
-                  Privacy Policy
-                </a>
-              </p>
+              <div className="flex items-center gap-2">
+                <Checkbox id="terms" />
+                <Label htmlFor="terms" className="text-xs font-normal">
+                  I agree to the{" "}
+                  <a
+                    href=""
+                    className="font-bold underline hover:cursor-pointer"
+                  >
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href=""
+                    className="font-bold underline hover:cursor-pointer"
+                  >
+                    Privacy Policy
+                  </a>
+                </Label>
+              </div>
               <div className="flex flex-col gap-2">
                 <Button
                   type="submit"
