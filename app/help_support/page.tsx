@@ -161,10 +161,11 @@ export default function HelpSupportPage() {
               </form>
             </div>
           </div>  
-        </div>  {/* CLOSE LEFT SIDE */}
+        </div>  
+      {/* CLOSE LEFT SIDE */}
 
 
-        {/* RIGHT SIDE */}
+      {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6">
 
           {/* DOCUMENTATION RESOURCES */}
