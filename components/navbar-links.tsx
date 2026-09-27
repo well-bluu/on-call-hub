@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Clock,
   CalendarDays,
   Users,
   Bell,
@@ -22,13 +23,30 @@ export function NavbarLinks() {
   const links = [
     { href: "/dashboard", label: "DASHBOARD", icon: LayoutDashboard },
     {
-      href: "/shift_management",
-      label: "SHIFT MANAGEMENT",
+      href: "/my_shift",
+      label: "MY SHIFT",
+      icon: Clock,
+    },
+    {
+      href: "/shared_calendar",
+      label: "SHARED CALENDAR",
       icon: CalendarDays,
     },
-    { href: "/workers", label: "WORKERS", icon: Users },
-    { href: "/notifications", label: "NOTIFICATIONS", icon: Bell },
-    { href: "/help_support", label: "HELP & SUPPORT", icon: HelpCircle },
+    { 
+      href: "/my_profile", 
+      label: "MY PROFILE", 
+      icon: Users 
+    },
+    { 
+      href: "/notifications", 
+      label: "NOTIFICATIONS", 
+      icon: Bell 
+    },
+    { 
+      href: "/help_support", 
+      label: "HELP & SUPPORT", 
+      icon: HelpCircle 
+    },
   ];
 
   return (
