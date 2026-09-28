@@ -15,12 +15,18 @@ export async function GET(request: Request) {
 	} = await supabase.auth.getUser();
 
 	if (user) {
+		const userMetadata = user.user_metadata ?? {};
+		const fullName = typeof userMetadata.full_name === "string" ? userMetadata.full_name.trim() : "";
+		const fullNameParts = fullName ? fullName.split(/\s+/).filter(Boolean) : [];
+		const firstName = (typeof userMetadata.first_name === "string" ? userMetadata.first_name.trim() : "") || fullNameParts[0] || "User";
+		const lastName = (typeof userMetadata.last_name === "string" ? userMetadata.last_name.trim() : "") || fullNameParts.slice(1).join(" ") || "Profile";
+
 		const {error: profileError} = await supabase.from("profiles").upsert(
 			{
 				id: user.id,
-				first_name: user.user_metadata?.first_name,
-				last_name: user.user_metadata?.last_name,
-				phone_number: user.user_metadata?.phone_number,
+				first_name: firstName,
+				last_name: lastName,
+				phone_number: userMetadata.phone_number ?? null,
 			},
 			{
 				onConflict: "id",
