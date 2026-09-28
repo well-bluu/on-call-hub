@@ -27,7 +27,7 @@ export default function SharedCalendarLayout({
               {/* <Menu className="h-5 w-5" /> */}
             </button>
 
-            {/* SEARCH ICON */}
+            {/* SEARCH ICON  - to be removed? */}
             <div className="relative">
               <input
                 type="text"

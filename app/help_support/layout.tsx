@@ -1,6 +1,6 @@
   import Navbar from "@/components/navbar";
   import { Search, Bell, CircleUserRound } from "lucide-react";
-  // Add menu to the import later
+  // Add menu to the import later (?)
 
   export default function ProtectedLayout({
     children,
@@ -27,7 +27,7 @@
                 {/* <Menu className="h-5 w-5" /> */}
               </button>
 
-              {/* SEARCH ICON */}
+              {/* SEARCH ICON - to be removed? */}
               <div className="relative">
                 <input
                   type="text"

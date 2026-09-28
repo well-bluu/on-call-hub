@@ -23,7 +23,7 @@ export default function SharedCalendarPage() {
   const goPrev = () => setCurrent(new Date(year, month - 1, 1));
   const goNext = () => setCurrent(new Date(year, month + 1, 1));
 
-  // Replace the URL/response-shape below with real endpoint.
+  // Replace the URL/response-shape below with data
   useEffect(() => {
     let cancelled = false;
 
@@ -39,7 +39,7 @@ export default function SharedCalendarPage() {
         if (!cancelled) setShifts(data);
       } catch {
         // Sample data
-        // Calendar renders something during development
+        // Calendar renders something during development (loading)
         if (!cancelled) setShifts(SAMPLE_SHIFTS);
       } finally {
         if (!cancelled) setLoading(false);

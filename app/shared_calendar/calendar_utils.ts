@@ -9,7 +9,7 @@ export interface Shift {
   assignedWorkers?: string[];
 }
 
-// Sample data 
+// Sample data (Hardcoded for now)
 export const SAMPLE_SHIFTS: Record<string, Shift> = {
   "2026-09-28": {
     time: "6:00 am - 5:00 pm",
