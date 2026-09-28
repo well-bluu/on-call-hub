@@ -27,22 +27,6 @@ export default function ProtectedLayout({
               {/* <Menu className="h-5 w-5" /> */}
             </button>
 
-            {/* SEARCH ICON */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="
-                  w-56 rounded-full
-                  border border-border bg-[#012247] 
-                  pl-4 pr-10 py-2 
-                  text-sm font-medium text-white placeholder:text-slate-400 "
-              />
-              <button>
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white" strokeWidth={2.5} />
-              </button>
-            </div>
-
             <button
               type="button"
               className="text-[hsl(var(--dark-blue))]"
