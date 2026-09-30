@@ -1,5 +1,5 @@
   import Navbar from "@/components/navbar";
-  import { Search, Bell, CircleUserRound } from "lucide-react";
+  import { Bell, CircleUserRound } from "lucide-react";
   // Add menu to the import later (?)
 
   export default function ProtectedLayout({
