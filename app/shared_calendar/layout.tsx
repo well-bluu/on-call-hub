@@ -1,5 +1,5 @@
 import Navbar from "@/components/navbar";
-import { Search, Bell, CircleUserRound } from "lucide-react";
+import { Bell, CircleUserRound } from "lucide-react";
 import bannerImage from "@/components/assets/images/shared-calendar-banner.png";
 
 export default function SharedCalendarLayout({
