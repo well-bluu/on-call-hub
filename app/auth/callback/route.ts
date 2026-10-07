@@ -16,10 +16,23 @@ export async function GET(request: Request) {
 
 	if (user) {
 		const userMetadata = user.user_metadata ?? {};
-		const fullName = typeof userMetadata.full_name === "string" ? userMetadata.full_name.trim() : "";
+		const fullName =
+			typeof userMetadata.full_name === "string"
+				? userMetadata.full_name.trim()
+				: "";
 		const fullNameParts = fullName ? fullName.split(/\s+/).filter(Boolean) : [];
-		const firstName = (typeof userMetadata.first_name === "string" ? userMetadata.first_name.trim() : "") || fullNameParts[0] || "User";
-		const lastName = (typeof userMetadata.last_name === "string" ? userMetadata.last_name.trim() : "") || fullNameParts.slice(1).join(" ") || "Profile";
+		const firstName =
+			(typeof userMetadata.first_name === "string"
+				? userMetadata.first_name.trim()
+				: "") ||
+			fullNameParts[0] ||
+			"User";
+		const lastName =
+			(typeof userMetadata.last_name === "string"
+				? userMetadata.last_name.trim()
+				: "") ||
+			fullNameParts.slice(1).join(" ") ||
+			"Profile";
 
 		const {error: profileError} = await supabase.from("profiles").upsert(
 			{
@@ -39,5 +52,5 @@ export async function GET(request: Request) {
 		}
 	}
 
-	return NextResponse.redirect(new URL("/protected", url.origin));
+	return NextResponse.redirect(new URL("/dashboard", url.origin));
 }
