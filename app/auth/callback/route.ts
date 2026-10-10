@@ -3,22 +3,22 @@ import { createClient } from "@/lib/supabase/server";
 
 //get db and schema
 import { db } from "@/db";
-import { googleTokens } from "@/db/schema";
+import { googleCalendarConnections } from "@/db/schema";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const supabase = await createClient();
-//var for the thingy token thing
+  //var for the thingy token thing
   let refreshToken: string | null = null;
 
   if (code) {
     await supabase.auth.exchangeCodeForSession(code);
 
-	//capture data returned from session exchange - need ni sya for identity verification, authorization trust
+    //capture data returned from session exchange - need ni sya for identity verification, authorization trust
     const { data } = await supabase.auth.exchangeCodeForSession(code);
     refreshToken = data.session?.provider_refresh_token ?? null;
-	//secret security key issued by Google - for cal api
+    //secret security key issued by Google - for cal api
   }
 
   const {
@@ -43,13 +43,13 @@ export async function GET(request: Request) {
       console.error("Profile creation failed:", profileError);
     }
 
-	//if token exists, insert into google_tokens table in db
+    //if token exists, insert into google_tokens table in db
     if (refreshToken) {
       await db
-        .insert(googleTokens)
-        .values({ authId: user.id, refreshToken })
-        .onConflictDoUpdate({ 
-          target: googleTokens.authId,
+        .insert(googleCalendarConnections)
+        .values({ authUsersId: user.id, refreshToken })
+        .onConflictDoUpdate({
+          target: googleCalendarConnections.authUsersId,
           set: { refreshToken },
         });
     }

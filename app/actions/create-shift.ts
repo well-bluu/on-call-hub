@@ -1,97 +1,58 @@
 "use server";
-import { eq } from "drizzle-orm";
+
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { calendarFor } from "@/lib/google_calendar";
-
 import { db } from "@/db";
-import {
-  owners,
-  workers,
-  shifts,
-  shiftAssignments,
-  googleTokens,
-} from "@/db/schema";
+import { shifts } from "@/db/schema";
+
+const PAGE = "/actions";
 
 export async function createShift(formData: FormData) {
+  // 1. who is asking?
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [owner] = await db
-    .select()
-    .from(owners)
-    .where(eq(owners.authId, user.id));
-  if (!owner) throw new Error("Only owners can create shifts");
+  // 2. only owners can add shifts
 
-  // 1. save the shift in Supabase
-  const [shift] = await db
-    .insert(shifts)
-    .values({
-      ownerId: owner.ownerId,
-      shiftName: String(formData.get("name")),
-      shiftDate: String(formData.get("date")),
-      startTime: String(formData.get("startTime")),
-      endTime: String(formData.get("endTime")),
-      status: "pending",
-    })
-    .returning();
+  // 3. read and clean the form values
+  const shiftName = String(formData.get("shiftName") ?? "").trim();
+  const shiftDate = String(formData.get("shiftDate") ?? "");
+  const startTime = String(formData.get("startTime") ?? "");
+  const endTime = String(formData.get("endTime") ?? "");
+  const requiredWorkers = Number(formData.get("requiredWorkers"));
+  const notes = String(formData.get("notes") ?? "").trim();
 
-  // 2. assign each chosen worker + add to their Google Calendar
-  for (const workerId of formData.getAll("workerIds").map(String)) {
-    await assignWorker(shift, workerId);
+  if (
+    !shiftName ||
+    !shiftDate ||
+    !startTime ||
+    !endTime ||
+    !Number.isInteger(requiredWorkers) ||
+    requiredWorkers < 1
+  ) {
+    redirect(`${PAGE}?error=invalid`);
   }
 
-  redirect("/protected");
-}
-
-async function assignWorker(
-  shift: typeof shifts.$inferSelect,
-  workerId: string,
-) {
-  const [assignment] = await db
-    .insert(shiftAssignments)
-    .values({ shiftId: shift.shiftId, workerId })
-    .returning();
-
-  //select.from(..) will return wrapper array container so thats why nasasulod bracket
-  const [worker] = await db
-    .select()
-    .from(workers)
-    .where(eq(workers.workerId, workerId));
-  if (!worker) return;
-
-  const [token] = await db
-    .select()
-    .from(googleTokens)
-    .where(eq(googleTokens.authId, worker.authId));
-  if (!token) return; // basta kailangan login google
-
+  // 4. save it in Supabase (profileId = the owner creating the shift)
   try {
-    const calendar = calendarFor(token.refreshToken);
-    //basta naas docs insert event sa calendar
-    //sa google workspace docs
-    const res = await calendar.events.insert({
-      calendarId: "primary",
-      requestBody: {
-        start: {
-          dateTime: `${shift.shiftDate}T${shift.startTime.slice(0, 5)}:00`,
-          timeZone: "Asia/Manila",
-        },
-        end: {
-          dateTime: `${shift.shiftDate}T${shift.endTime.slice(0, 5)}:00`,
-          timeZone: "Asia/Manila",
-        },
-      },
+    await db.insert(shifts).values({
+      profileId: user.id,
+      shiftName,
+      shiftDate,
+      startTime,
+      endTime,
+      requiredWorkers,
+      notes: notes || null,
     });
-
-    await db
-      .update(shiftAssignments)
-      .set({ googleEventId: res.data.id })
-      .where(eq(shiftAssignments.assignmentId, assignment.assignmentId));
   } catch (e) {
-    console.error("Calendar insert failed:", e); // shit and assignment work but wala ra cal if fail
+    console.error("Saving shift failed:", e);
+    redirect(`${PAGE}?error=save-failed`);
   }
+
+  revalidatePath(PAGE);
+  redirect(`${PAGE}?created=1`);
 }
