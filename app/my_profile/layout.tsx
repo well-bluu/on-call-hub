@@ -1,5 +1,6 @@
 import Navbar from "@/components/navbar";
 import Header from "@/app/my_profile/header";
+import Banner from "@/app/my_profile/header"
 
 export default function ProtectedLayout({
   children,
