@@ -24,15 +24,6 @@ const NOTIFICATIONS: Notification[] = [
     read: false,
   },
   {
-    id: "3",
-    kind: "reminder",
-    category: "system",
-    title: "Availability reminder",
-    description: "Description",
-    timeAgo: "3 hours ago",
-    read: false,
-  },
-  {
     id: "4",
     kind: "declined",
     category: "shifts",

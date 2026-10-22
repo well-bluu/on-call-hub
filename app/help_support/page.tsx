@@ -19,7 +19,7 @@ const FAQS = [
     icon: Calendar, 
     iconBg: "bg-[#E6EFFD] text-[#0050D3]",
     shadow: "#E6EFFD",
-    question: "How do I set my availability status?",
+    question: "How do I accept a shift offer?",
     answer:
       "Lorem ipsum dolor sit amet consectetur adipiscing elit. Est culpa consequat temporibus laborum et ad. Id et quas nisi culpa nobis non. Nostrud dolorem soluta nobis nulla eligendi est fugiat qui et. Ut amet labore dolorem dolores aliqua.", // Must change later
   },

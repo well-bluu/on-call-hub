@@ -7,12 +7,10 @@ import dashboardBanner2 from "@/components/assets/images/dashboard-banner-2.png"
 import dashboardBanner3 from "@/components/assets/images/dashboard-banner-3.png";
 import {
   Calendar,
-  CalendarCheck,
   CheckCircle2,
   CircleUserRound,
-  Clock,
-  Cross,
   User,
+  UserX,
 } from "lucide-react";
 
 // HARD-CODED DATA - CHANGE LATER
@@ -66,10 +64,8 @@ const UPCOMING_SHIFTS: {
 ];
 
 const WORKER_SUMMARY = [
-  { icon: CalendarCheck, value: "2", label: "AVAILABLE", box: "bg-[#E6EFFD] border-[#0050D3]", iconColor: "text-[#0050D3]" },
-  { icon: Cross, value: "2", label: "ON LEAVE", box: "bg-[#FBDEDE] border-[#FF0000]", iconColor: "text-[#FF0000]" },
-  { icon: CheckCircle2, value: "2", label: "TEXT", box: "bg-[#E3F4E6] border-[#1A9E3A]", iconColor: "text-[#1A9E3A]" },
-  { icon: Clock, value: "2", label: "BUSY", box: "bg-[#FEF3E6] border-[#FD950F]", iconColor: "text-[#FD950F]" },
+  { icon: CheckCircle2, value: "2", label: "ACTIVE", box: "bg-[#E3F4E6] border-[#1A9E3A]", iconColor: "text-[#1A9E3A]" },
+  { icon: UserX, value: "2", label: "INACTIVE", box: "bg-slate-100 border-slate-400", iconColor: "text-slate-500" },
 ];
 
 const RECENT_ACTIVITY = [
