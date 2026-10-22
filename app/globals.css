@@ -31,6 +31,8 @@
     --radius: 0.5rem;
     --signup-button: #0050d3;
     --dark-blue: 211 97% 14%;
+    --document-color: #fef3e6;
+    --emergency-color: #fbdede;
   }
   .dark {
     --background: 0 0% 3.9%;

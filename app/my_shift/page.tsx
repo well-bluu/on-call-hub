@@ -1,12 +1,30 @@
-export default function ProtectedPage() {
+import WorkerSummary from "@/components/workerSummary";
+import { requirePermission } from "@/lib/auth/require-permission";
+import ShiftList from "@/components/ShiftList";
+import RecentActivity from "@/components/RecentActivity";
+import bannerImage from "@/components/assets/images/my-shifts.png";
+import ShiftBanner from "./ShiftBanner";
+export const instant = false;
+
+export default async function ProtectedPage() {
+  await requirePermission("shift.view.own");
+
   return (
     <div className=" flex flex-col gap-6 justify-center p-20">
-      <h1 className="text-2xl font-bold tracking-tight">
-        TESTING THIS IS THE MY SHIFT PAGE
-      </h1>
-      <p className="text-neutral-400">
-        Welcome back to your system monitor panel.
-      </p>
+      <div className="flex flex-row flex-1 gap-10 mt-8">
+        <div className="flex flex-col gap-3">
+          <ShiftBanner
+            image={bannerImage}
+            title={"My Shifts"}
+            description={"View and manage your shifts"}
+          />
+          <ShiftList />
+        </div>
+        <div className="flex flex-col gap-3">
+          <WorkerSummary />
+          <RecentActivity />
+        </div>
+      </div>
     </div>
   );
 }
