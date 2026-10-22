@@ -1,11 +1,21 @@
 import Navbar from "@/components/navbar";
 import { Bell, CircleUserRound } from "lucide-react";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function ProtectedLayout({
+export const instant = false;
+
+export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: isOwner } = await supabase.rpc("has_permission", {
+    requested_permission: "dashboard.view.owner",
+  });
+  if (isOwner === true) redirect("/owner/dashboard");
+
   return (
     <main className="min-h-screen w-full flex flex-row bg-white text-foreground">
       <Navbar />
