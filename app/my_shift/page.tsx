@@ -10,20 +10,18 @@ export default async function ProtectedPage() {
   await requirePermission("shift.view.own");
 
   return (
-    <div className=" flex flex-col gap-6 justify-center p-20">
-      <div className="flex flex-row flex-1 gap-10 mt-8">
-        <div className="flex flex-col gap-3">
-          <ShiftBanner
-            image={bannerImage}
-            title={"My Shifts"}
-            description={"View and manage your shifts"}
-          />
-          <ShiftList />
-        </div>
-        <div className="flex flex-col gap-3">
-          <WorkerSummary />
-          <RecentActivity />
-        </div>
+    <div className="flex flex-row flex-1 gap-10 justify-center">
+      <div className="flex flex-col gap-3">
+        <ShiftBanner
+          image={bannerImage}
+          title={"My Shifts"}
+          description={"View and manage your shifts"}
+        />
+        <ShiftList />
+      </div>
+      <div className="flex flex-col gap-3">
+        <WorkerSummary />
+        <RecentActivity />
       </div>
     </div>
   );
