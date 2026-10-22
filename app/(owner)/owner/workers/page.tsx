@@ -22,24 +22,21 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleCheck,
-  Clock,
-  Cross,
   SquarePen,
   Trash2,
   User,
+  UserX,
 } from "lucide-react";
 
 import bannerImage from "@/components/assets/images/workerBanner.png";
 
 /* Worker types */
-type Availability = "Available" | "On Leave" | "Busy";
 type WorkerStatus = "Active" | "Inactive";
 
 interface Worker {
   id: string;
   name: string;
   contact: string;
-  availability: Availability;
   status: WorkerStatus;
 }
 
@@ -58,7 +55,6 @@ const INITIAL_WORKERS: Worker[] = Array.from(
     id: String(i + 1),
     name: `Worker ${i + 1}`,
     contact: "00000000000",
-    availability: "Available",
     status: "Active",
   })
 );
@@ -103,12 +99,6 @@ const navy = "text-[hsl(var(--dark-blue))]";
 
 const inputClass =
   "h-10 w-full rounded-xl bg-[#E6EEFC] px-4 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-blue-700";
-
-const AVAILABILITY_STYLES: Record<Availability, string> = {
-  Available: "bg-[#E2F3E6] text-green-700",
-  "On Leave": "bg-red-100 text-red-600",
-  Busy: "bg-orange-100 text-orange-600",
-};
 
 /* Workers banner */
 function Banner({ image }: { image: StaticImageData }) {
@@ -164,10 +154,8 @@ function SummaryTile({
 
 /* DYNAMIC: Summary counts use the workers array */
 function WorkerSummary({ workers }: { workers: Worker[] }) {
-  const count = (availability: Availability) =>
-    workers.filter(
-      (worker) => worker.availability === availability
-    ).length;
+  const count = (status: WorkerStatus) =>
+    workers.filter((worker) => worker.status === status).length;
 
   return (
     <section className={`p-6 ${card}`}>
@@ -177,35 +165,17 @@ function WorkerSummary({ workers }: { workers: Worker[] }) {
 
       <div className="mt-4 grid grid-cols-2 gap-5">
         <SummaryTile
-          icon={CalendarCheck}
-          count={count("Available")}
-          label="Available"
-          className="border-blue-500 bg-[#E3ECFB] text-blue-600"
-        />
-
-        <SummaryTile
-          icon={Cross}
-          count={count("On Leave")}
-          label="On Leave"
-          className="border-red-500 bg-[#FBDEDE] text-red-500"
-        />
-
-        <SummaryTile
           icon={CircleCheck}
-          count={
-            workers.filter(
-              (worker) => worker.status === "Active"
-            ).length
-          }
+          count={count("Active")}
           label="Active"
           className="border-green-600 bg-[#E2F1E6] text-green-600"
         />
 
         <SummaryTile
-          icon={Clock}
-          count={count("Busy")}
-          label="Busy"
-          className="border-orange-400 bg-[#FDF1E4] text-orange-500"
+          icon={UserX}
+          count={count("Inactive")}
+          label="Inactive"
+          className="border-slate-400 bg-slate-100 text-slate-500"
         />
       </div>
     </section>
@@ -872,10 +842,6 @@ export function WorkersTable({
               </th>
 
               <th scope="col" className="font-bold">
-                Availability
-              </th>
-
-              <th scope="col" className="font-bold">
                 Status
               </th>
 
@@ -889,7 +855,7 @@ export function WorkersTable({
             {workers.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={5}
                   className="h-24 text-center text-sm text-slate-500"
                 >
                   No workers yet.
@@ -926,19 +892,6 @@ export function WorkersTable({
                 {/* Contact number */}
                 <td className="text-[13px] font-bold">
                   {worker.contact}
-                </td>
-
-                {/* Availability */}
-                <td>
-                  <span
-                    className={`inline-block w-32 rounded-lg py-1.5 text-[13px] font-bold ${
-                      AVAILABILITY_STYLES[
-                        worker.availability
-                      ]
-                    }`}
-                  >
-                    {worker.availability}
-                  </span>
                 </td>
 
                 {/* Worker status */}
@@ -1007,7 +960,6 @@ export default function OwnerWorkersPage() {
         id: crypto.randomUUID(),
         name: form.fullName.trim(),
         contact: form.phone,
-        availability: "Available",
         status: "Active",
       },
     ]);
