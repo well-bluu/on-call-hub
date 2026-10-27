@@ -57,7 +57,7 @@ export function OwnerSidebarLinks() {
             className={`
               flex h-[30px] shrink-0 items-center gap-2
               rounded-[5px] border border-white
-              px-2 text-[10px] leading-3
+              px-2 text-[11px] leading-3
               transition-colors
               focus-visible:outline focus-visible:outline-2
               focus-visible:outline-offset-2 focus-visible:outline-white

@@ -40,7 +40,7 @@ export default function Navbar() {
       <div
         className="
           mt-auto w-full shrink-0
-          border-t border-neutral-800 pt-[10px]
+          border-t border-neutral-800 pt-[11px]
 
           [&_button]:flex
           [&_button]:h-[26px]
@@ -55,7 +55,7 @@ export default function Navbar() {
           [&_button]:bg-[hsl(var(--dark-blue))]
           [&_button]:px-2
           [&_button]:py-0
-          [&_button]:text-[10px]
+          [&_button]:text-[11px]
           [&_button]:leading-3
           [&_button]:text-white
           [&_button]:transition-colors
@@ -74,7 +74,7 @@ export default function Navbar() {
           [&_a]:border-white
           [&_a]:px-2
           [&_a]:py-0
-          [&_a]:text-[10px]
+          [&_a]:text-[11px]
           [&_a]:leading-3
           [&_a]:text-white
           [&_a]:transition-colors
@@ -88,7 +88,7 @@ export default function Navbar() {
       >
         <Suspense
           fallback={
-            <div className="text-center text-[10px] text-white/60">
+            <div className="text-center text-[11px] text-white/60">
               Loading...
             </div>
           }
