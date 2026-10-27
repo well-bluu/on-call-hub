@@ -36,6 +36,22 @@ export function SignUpForm({
 	const [isLoading, setIsLoading] = useState(false);
 	const router = useRouter();
 
+	const handleGoogleSignUp = async () => {
+		const supabase = createClient();
+
+		await supabase.auth.signInWithOAuth({
+			provider: "google",
+			options: {
+				redirectTo: `${window.location.origin}/auth/callback`,
+				scopes: "https://www.googleapis.com/auth/calendar.events",
+				queryParams: {
+					access_type: "offline",
+					prompt: "consent",
+				},
+			},
+		});
+	};
+
 	const handleSignUp = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const supabase = createClient();
@@ -181,7 +197,11 @@ export function SignUpForm({
 									<span className="mx-4 text-sm text-gray-500">or</span>
 									<div className="flex-grow border-t border-gray-300" />
 								</div>
-								<Button type="button" variant="outline" className="font-bold">
+								<Button
+									type="button"
+									variant="outline"
+									className="font-bold"
+									onClick={handleGoogleSignUp}>
 									<Image src={google} width={"20"} height={"20"} alt={""} />
 									Continue with Google
 								</Button>
