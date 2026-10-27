@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import bannerImage from "@/components/assets/images/my-shifts-banner.png";
 import WorkerSummary from "@/components/workerSummary";
@@ -157,7 +157,7 @@ export default function MyShiftPage() {
           </div>
 
           <div className="min-w-0 px-3 pb-4 pt-1 sm:px-5">
-            <table className="w-full table-fixed border-separate border-spacing-x-0 border-spacing-y-1 text-center text-xs text-[hsl(var(--dark-blue))]">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-center text-xs text-[hsl(var(--dark-blue))]">
               <caption className="sr-only">
                 {TABS.find((tab) => tab.key === activeTab)?.label}
               </caption>
@@ -177,7 +177,7 @@ export default function MyShiftPage() {
                       <th
                         key={heading}
                         scope="col"
-                        className="break-words px-1 py-1 font-bold"
+                        className="break-words px-1 py-2 font-bold"
                       >
                         {heading}
                       </th>
@@ -197,44 +197,53 @@ export default function MyShiftPage() {
                     </td>
                   </tr>
                 ) : (
-                  rows.map((shift) => {
+                  rows.map((shift, index) => {
                     const status = STATUS_STYLES[shift.status];
                     const cellStyle =
                       "whitespace-normal break-words border-y border-neutral-300 px-1 py-3 align-middle font-semibold";
 
                     return (
-                      <tr
-                        key={`${shift.date}-${shift.task}`}
-                        className="transition-colors hover:bg-neutral-50"
-                      >
-                        <td
-                          className={`${cellStyle} rounded-l-lg border-l`}
-                        >
-                          {formatDate(shift.date)}
-                        </td>
+                      <Fragment key={`${shift.date}-${shift.task}`}>
+                        {/* Gap only between shift rows */}
+                        {index > 0 && (
+                          <tr aria-hidden="true">
+                            <td
+                              colSpan={5}
+                              className="h-3 border-0 p-0"
+                            />
+                          </tr>
+                        )}
 
-                        <td className={cellStyle}>
-                          {formatWeekday(shift.date)}
-                        </td>
-
-                        <td className={cellStyle}>
-                          {shift.time}
-                        </td>
-
-                        <td className={cellStyle}>
-                          {shift.task}
-                        </td>
-
-                        <td
-                          className={`${cellStyle} rounded-r-lg border-r`}
-                        >
-                          <span
-                            className={`inline-block max-w-full whitespace-normal break-words rounded-full px-1.5 py-1 text-[10px] font-bold ${status.pill}`}
+                        <tr className="transition-colors hover:bg-neutral-50">
+                          <td
+                            className={`${cellStyle} rounded-l-lg border-l`}
                           >
-                            {status.label}
-                          </span>
-                        </td>
-                      </tr>
+                            {formatDate(shift.date)}
+                          </td>
+
+                          <td className={cellStyle}>
+                            {formatWeekday(shift.date)}
+                          </td>
+
+                          <td className={cellStyle}>
+                            {shift.time}
+                          </td>
+
+                          <td className={cellStyle}>
+                            {shift.task}
+                          </td>
+
+                          <td
+                            className={`${cellStyle} rounded-r-lg border-r`}
+                          >
+                            <span
+                              className={`inline-block max-w-full whitespace-normal break-words rounded-full px-1.5 py-1 text-[10px] font-bold ${status.pill}`}
+                            >
+                              {status.label}
+                            </span>
+                          </td>
+                        </tr>
+                      </Fragment>
                     );
                   })
                 )}
@@ -244,7 +253,7 @@ export default function MyShiftPage() {
         </div>
       </div>
 
-      {/* Worker Summary & Recent Activity components */}
+      {/* Worker Summary & Recent Activity */}
       <div className="flex min-w-0 flex-col gap-4">
         <WorkerSummary />
         <RecentActivity />
