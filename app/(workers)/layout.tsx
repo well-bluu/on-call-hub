@@ -1,5 +1,7 @@
 import Header from "@/components/header";
 import Navbar from "@/components/navbar";
+import { SidebarShell } from "@/components/sidebar-shell";
+import { Suspense } from "react";
 
 export default function OwnerLayout({
   children,
@@ -9,7 +11,11 @@ export default function OwnerLayout({
   return (
     <main className="min-h-screen w-full flex flex-row bg-white text-foreground">
       {/*NavBar Sidebar */}
-      <Navbar />
+      <SidebarShell>
+        <Suspense fallback={<NavbarSkeleton />}>
+          <Navbar />
+        </Suspense>
+      </SidebarShell>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-white">
@@ -21,5 +27,18 @@ export default function OwnerLayout({
         </div>
       </div>
     </main>
+  );
+}
+
+function NavbarSkeleton() {
+  return (
+    <div className="flex flex-col gap-10 p-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="h-12 w-48 animate-pulse rounded-lg bg-white/20"
+        />
+      ))}
+    </div>
   );
 }

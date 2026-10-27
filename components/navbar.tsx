@@ -1,11 +1,13 @@
 import { AuthButton } from "@/components/auth-button";
 import { Suspense } from "react";
 import { NavbarLinks } from "./navbar-links";
+import { getRole } from "@/lib/auth/require-permission";
 import Image from "next/image";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const role = await getRole();
   return (
-    <nav className="w-[300px] flex flex-col gap-6 justify-start p-8 sticky top-0 h-screen border-r border-neutral-800 bg-[hsl(var(--dark-blue))]">
+    <nav className="w-full h-full flex flex-col gap-6 justify-start p-8 bg-[hsl(var(--dark-blue))]">
       <div className="flex flex-col items-center mb-5">
         <Image
           src="/pictures2/oncallHubLogo.png"
@@ -20,7 +22,7 @@ export default function Navbar() {
           height={250}
         />
       </div>
-      <NavbarLinks />
+      <NavbarLinks role={role as "owner" | "worker" | null} />
 
       <div
         className="mt-auto pt-4 border-t border-neutral-800 w-full
