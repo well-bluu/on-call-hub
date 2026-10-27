@@ -42,26 +42,26 @@ const SUMMARY = [
 
 export default function WorkerSummary() {
   return (
-    <section className="rounded-xl border border-border bg-white p-4 shadow-sm">
-      <h2 className="mb-3 text-center text-sm font-bold text-[hsl(var(--dark-blue))]">
+    <section className="min-w-0 rounded-xl border border-border bg-white p-4 shadow-sm">
+      <h2 className="mb-4 text-center text-sm font-bold leading-5 text-[hsl(var(--dark-blue))]">
         WORKER SUMMARY
       </h2>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid auto-rows-fr grid-cols-2 gap-4">
         {SUMMARY.map((item) => {
           const Icon = item.icon;
 
           return (
             <div
               key={item.label}
-              className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-2 ${item.box}`}
+              className={`flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-1 rounded-lg border p-2 ${item.box}`}
             >
               <Icon
-                className={`h-6 w-6 ${item.iconColor}`}
+                className={`h-6 w-6 shrink-0 ${item.iconColor}`}
                 aria-hidden="true"
               />
 
-              <p className="text-xl font-bold leading-tight text-[hsl(var(--dark-blue))]">
+              <p className="text-xl font-bold leading-6 text-[hsl(var(--dark-blue))]">
                 {item.value}
                 {item.suffix && (
                   <span className="text-neutral-400">
