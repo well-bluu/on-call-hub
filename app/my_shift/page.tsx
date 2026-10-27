@@ -1,5 +1,6 @@
 "use client";
 
+import bannerImage from "@/components/assets/images/my-shifts-banner.png";
 import { useState } from "react";
 import {
   CalendarCheck,
@@ -10,9 +11,6 @@ import {
   User,
   ChevronDown,
 } from "lucide-react";
-// Once the banner asset exists at components/assets/images/my-shifts-banner.png,
-// uncomment this import and the style prop on the banner div below.
-// import bannerImage from "@/components/assets/images/my-shifts-banner.png";
 
 type TabKey = "upcoming" | "requests" | "past" | "cancelled";
 type ShiftStatus = "accepted" | "pending" | "cancelled";
@@ -145,7 +143,7 @@ export default function MyShiftPage() {
         {/* Hero banner */}
         <div
           className="relative overflow-hidden rounded-2xl border-[1px] border-[#D9D9D9] bg-gradient-to-r from-[#E6EFFD] to-[#DCE6FB] bg-cover bg-[position:40%_center] p-8"
-          // style={{ backgroundImage: `url(${bannerImage.src})` }}
+          style={{ backgroundImage: `url(${bannerImage.src})` }}
         >
           <div className="max-w-lg">
             <h1 className="text-3xl font-extrabold tracking-tight text-[hsl(var(--dark-blue))]">
