@@ -1,5 +1,5 @@
 import Header from "@/components/header";
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/sidebar/worker-sidebar";
 import NotificationBanner from "@/app/notifications/notificationBanner";
 import bannerImage from "@/components/assets/images/notification-banner.png";
 

@@ -1,4 +1,4 @@
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/sidebar/worker-sidebar";
 import Header from "@/components/header";
 import WorkerBanner from "@/components/workerBanner";
 import bannerImage from "@/components/assets/images/workerBanner.png";

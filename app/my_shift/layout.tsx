@@ -1,4 +1,4 @@
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/sidebar/worker-sidebar";
 
 export default function ProtectedLayout({
   children,

@@ -1,5 +1,5 @@
 
-import OwnerSidebar from "@/components/owner-sidebar";
+import OwnerSidebar from "@/components/sidebar/owner-sidebar";
 import { Bell, CircleUserRound } from "lucide-react";
 
 export default function OwnerLayout({
