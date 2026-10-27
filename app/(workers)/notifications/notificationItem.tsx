@@ -30,34 +30,53 @@ export function NotificationItem({
   const { icon: Icon, tile, icon_color } = KIND_STYLES[notification.kind];
 
   return (
-    <li className="flex items-start gap-5 px-6 py-6">
+    <li className="relative flex items-start gap-3 px-4 py-4 sm:gap-5 sm:px-6 sm:py-6">
       <div
-        className={`flex size-14 shrink-0 items-center justify-center rounded-lg ${tile}`}
+        className={`flex size-10 shrink-0 items-center justify-center rounded-lg sm:size-14 ${tile}`}
       >
         <Icon
-          className={`size-8 ${icon_color}`}
+          className={`size-6 sm:size-8 ${icon_color}`}
           strokeWidth={1.75}
           aria-hidden
         />
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="text-lg font-bold uppercase leading-tight text-slate-900">
+        {/* pr-4 keeps the title clear of the mobile unread dot */}
+        <h3 className="break-words pr-4 text-sm font-bold uppercase leading-tight text-slate-900 sm:pr-0 sm:text-lg">
           {notification.title}
         </h3>
         <p className="mt-1 text-sm text-slate-800">
           {notification.description}
         </p>
-        <Link
-          href={notification.href ?? "#"}
-          className="mt-1 inline-flex items-center gap-0.5 text-sm font-semibold text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-        >
-          View Details
-          <ChevronRight className="size-4" aria-hidden />
-        </Link>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <Link
+            href={notification.href ?? "#"}
+            className="inline-flex items-center gap-0.5 text-sm font-semibold text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+          >
+            View Details
+            <ChevronRight className="size-4" aria-hidden />
+          </Link>
+          {/* Mobile: timestamp sits under the text instead of in its own column */}
+          <span className="text-xs text-slate-400 sm:hidden">
+            {notification.timeAgo}
+          </span>
+        </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-4 pt-1">
+      {/* Mobile: unread dot in the top-right corner */}
+      {!notification.read && (
+        <span className="absolute right-4 top-4 sm:hidden">
+          <span
+            className="block size-2.5 rounded-full bg-blue-600"
+            aria-hidden
+          />
+          <span className="sr-only">Unread</span>
+        </span>
+      )}
+
+      {/* sm and up: original right-hand column */}
+      <div className="hidden shrink-0 items-center gap-4 pt-1 sm:flex">
         <span className="text-sm text-slate-400">{notification.timeAgo}</span>
         {/* Fixed-width slot keeps timestamps aligned for read items */}
         <span className="flex size-3.5 items-center justify-center">

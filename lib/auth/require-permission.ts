@@ -17,3 +17,12 @@ export async function requirePermission(permission: string) {
 
   return { supabase };
 }
+
+export async function getRole() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims) redirect("/auth/login");
+  const user = data?.claims;
+  const userRole = user?.user_role;
+  return userRole;
+}

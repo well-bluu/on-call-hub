@@ -20,13 +20,14 @@ export default function Banner({
 }: Props) {
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-[#D9D9D9] bg-cover bg-[position:40%_center] p-8"
+      className="overflow-hidden rounded-2xl border border-[#D9D9D9] bg-cover bg-[position:40%_center] p-5 sm:p-8"
       style={{ backgroundImage: `url(${image.src})` }}
     >
-      <div className="flex flex-row items-center justify-between gap-5">
+      {/* Stacked on mobile (selector under the text), one row from sm */}
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         {/* Title and description */}
         <div>
-          <h1 className="text-4xl font-extrabold uppercase tracking-tight text-[hsl(var(--dark-blue))]">
+          <h1 className="text-2xl font-extrabold uppercase tracking-tight text-[hsl(var(--dark-blue))] sm:text-4xl">
             {title}
           </h1>
           <p className="mt-2 max-w-[12rem] text-sm font-medium text-[hsl(var(--dark-blue))]">
