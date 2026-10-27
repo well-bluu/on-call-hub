@@ -6,10 +6,14 @@ import * as motion from "motion/react-client";
 
 export default function Page() {
   return (
-    <div className="relative flex min-h-svh w-full items-center justify-evenly overflow-hidden p-6 md:p-10">
-      {/* Decorative circles — positioned absolutely, behind everything else */}
+    // Mobile: stacked column (logo on top, card below)
+    // md+: side-by-side row, same as before
+    <div className="relative flex min-h-svh w-full flex-col items-center justify-center gap-6 overflow-hidden px-4 py-8 sm:gap-8 md:flex-row md:justify-evenly md:gap-0 md:p-10">
+      {/* Decorative circles — positioned absolutely, behind everything else.
+          On mobile only two are shown (partially off-screen) to match the design;
+          the rest appear from md and up. */}
       <motion.div
-        className="absolute -top-10 left-12 h-32 w-32 md:h-40 md:w-40"
+        className="pointer-events-none absolute -left-20 top-28 h-52 w-52 md:-top-10 md:left-12 md:h-40 md:w-40"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
@@ -18,7 +22,7 @@ export default function Page() {
       </motion.div>
 
       <motion.div
-        className="absolute top-24 left-1/2 h-24 w-24 md:h-28 md:w-28"
+        className="pointer-events-none absolute left-1/2 top-24 hidden h-24 w-24 md:block md:h-28 md:w-28"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.25, ease: "easeOut" }}
@@ -27,7 +31,7 @@ export default function Page() {
       </motion.div>
 
       <motion.div
-        className="absolute bottom-10 left-4 h-40 w-40 md:h-52 md:w-52"
+        className="pointer-events-none absolute bottom-10 left-4 hidden h-40 w-40 md:block md:h-52 md:w-52"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
@@ -36,7 +40,7 @@ export default function Page() {
       </motion.div>
 
       <motion.div
-        className="absolute -bottom-16 right-10 h-36 w-36 md:h-44 md:w-44"
+        className="pointer-events-none absolute -bottom-16 -right-16 h-52 w-52 md:right-10 md:h-44 md:w-44"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.55, ease: "easeOut" }}
@@ -46,16 +50,24 @@ export default function Page() {
 
       {/* Foreground content, layered above the circles */}
       <motion.div
-        className="relative z-10"
+        className="relative z-10 flex w-full justify-center md:w-auto"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <Image src={logo} height={355} width={442} alt="On-Call-Hub Logo" />
+        <Image
+          src={logo}
+          height={355}
+          width={442}
+          alt="On-Call-Hub Logo"
+          priority
+          sizes="(max-width: 640px) 176px, (max-width: 768px) 256px, (max-width: 1024px) 320px, 442px"
+          className="h-auto w-44 sm:w-64 md:w-80 lg:w-[442px]"
+        />
       </motion.div>
 
       <motion.div
-        className="relative z-10 shrink-0 w-full max-w-sm"
+        className="relative z-10 w-full max-w-sm shrink-0"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
