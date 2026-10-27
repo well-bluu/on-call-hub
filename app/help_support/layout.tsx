@@ -1,4 +1,4 @@
-  import Navbar from "@/components/navbar";
+  import Navbar from "@/components/sidebar/worker-sidebar";
   import { Bell, CircleUserRound } from "lucide-react";
   // Add menu to the import later (?)
 
