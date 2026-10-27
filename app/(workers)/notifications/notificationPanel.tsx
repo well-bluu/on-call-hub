@@ -33,19 +33,20 @@ export function NotificationsPanel({ initial }: { initial: Notification[] }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="flex min-w-0 flex-col gap-4">
+      {/* Mobile: tabs on one row, buttons on the next. sm+: single row */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <NotificationTabs active={filter} onChange={setFilter} />
 
-        <div className="flex items-center gap-3">
+        <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:gap-3">
           <button
             onClick={markAllAsRead}
             disabled={!hasUnread}
-            className="rounded-full border border-blue-700 px-4 py-1.5 text-sm font-semibold uppercase text-blue-700 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+            className="rounded-full border border-blue-700 px-2 py-2 text-xs font-semibold uppercase text-blue-700 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent sm:px-4 sm:py-1.5 sm:text-sm"
           >
             Mark all as read
           </button>
-          <button className="rounded-full bg-blue-700 px-5 py-1.5 text-sm font-semibold uppercase text-white transition-colors hover:bg-blue-800">
+          <button className="rounded-full bg-blue-700 px-2 py-2 text-xs font-semibold uppercase text-white transition-colors hover:bg-blue-800 sm:px-5 sm:py-1.5 sm:text-sm">
             View all
           </button>
         </div>
@@ -59,7 +60,7 @@ export function NotificationsPanel({ initial }: { initial: Notification[] }) {
             ))}
           </ul>
         ) : (
-          <p className="px-6 py-16 text-center text-sm text-slate-500">
+          <p className="px-4 py-12 text-center text-sm text-slate-500 sm:px-6 sm:py-16">
             No notifications in this view.
           </p>
         )}

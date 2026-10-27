@@ -15,10 +15,11 @@ interface Props {
 
 export function NotificationTabs({ active, onChange }: Props) {
   return (
+    // On narrow screens the tabs scroll sideways instead of wrapping or overflowing
     <div
       role="tablist"
       aria-label="Filter notifications"
-      className="flex items-center gap-2"
+      className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto sm:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {TABS.map((tab) => {
         const isActive = tab.value === active;
@@ -28,7 +29,7 @@ export function NotificationTabs({ active, onChange }: Props) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.value)}
-            className={`rounded-full px-5 py-1.5 text-sm font-semibold uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:px-5 sm:text-sm ${
               isActive
                 ? "bg-blue-100 text-blue-700"
                 : "text-slate-900 hover:bg-slate-100"

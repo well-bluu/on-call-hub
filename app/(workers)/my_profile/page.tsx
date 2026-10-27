@@ -10,7 +10,7 @@ import bannerImage from "@/components/assets/images/workerBanner.png";
 export const instant = false;
 
 export default async function ProtectedPage() {
-  await requirePermission("dashboard.view.worker");
+  await requirePermission("profile.view.own");
 
   return (
     <>
