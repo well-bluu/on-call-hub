@@ -5,6 +5,7 @@ import bannerImage from "@/components/assets/images/my-shifts.png";
 import WorkerSummary from "@/components/workerSummary";
 import Banner from "./ShiftBanner";
 import RecentActivity from "@/components/worker-activity";
+import GetShifts from "@/components/getShifts";
 
 type TabKey = "upcoming" | "requests" | "past" | "cancelled";
 type ShiftStatus = "accepted" | "pending" | "cancelled";
@@ -257,6 +258,7 @@ export default function MyShiftPage() {
         <WorkerSummary />
         <RecentActivity />
       </div>
+      <GetShifts />
     </div>
   );
 }
