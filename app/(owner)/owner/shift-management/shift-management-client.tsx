@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { StaticImageData } from "next/image";
 import { ChevronDown, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import bannerImage from "@/components/assets/images/shift-management-banner.png";
+import { createClient } from "@/lib/supabase/client";
 
 /* Shift types */
 type ShiftColor = "green" | "blue" | "orange";
@@ -618,7 +619,7 @@ function Field({
 }
 
 /* Add shift form */
-function AddShiftForm({ onAdd }: { onAdd: (f: FormState) => void }) {
+function AddShiftForm({ onAdd }: { onAdd: (f: FormState) => Promise<void> }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState("");
   const update = (key: keyof FormState) => (v: string) =>
@@ -638,8 +639,15 @@ function AddShiftForm({ onAdd }: { onAdd: (f: FormState) => void }) {
       return;
     }
     setError("");
-    onAdd(form);
-    setForm(EMPTY_FORM);
+    void onAdd(form)
+      .then(() => setForm(EMPTY_FORM))
+      .catch((submitError) => {
+        setError(
+          submitError instanceof Error
+            ? submitError.message
+            : "Unable to create the shift.",
+        );
+      });
   };
 
   const reset = () => {
@@ -962,6 +970,7 @@ function ShiftCalendar({ shifts }: { shifts: Record<string, CalendarShift> }) {
 
 /* Owner Shift Management page */
 export default function OwnerShiftManagementPage() {
+  const supabase = createClient();
   /* TODO: Load shifts from database instead of mock data */
   const [rows, setRows] = useState(INITIAL_ROWS);
 
@@ -977,14 +986,30 @@ export default function OwnerShiftManagementPage() {
   const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
 
   /* TODO: Save shift to database (name, date, start, end, required, notes), then refresh the list */
-  const addShift = (f: FormState) => {
+  const addShift = async (f: FormState) => {
     const required = Math.max(1, Number(f.required) || 1);
+    const startDate = new Date(`${f.date}T${f.start}`);
+    const endDate = new Date(`${f.date}T${f.end}`);
+    if (endDate <= startDate) endDate.setDate(endDate.getDate() + 1);
+
+    const { data: shift, error } = await supabase
+      .from("shifts")
+      .insert({
+        shift_name: f.name,
+        starts_at: startDate.toISOString(),
+        ends_at: endDate.toISOString(),
+        required_workers: required,
+        notes: f.notes.trim() || null,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
 
     setRows((prev) => [
       ...prev,
       {
-        /* TODO: Use the id returned by the database */
-        id: crypto.randomUUID(),
+        id: shift.id,
         date: f.date,
         start: f.start,
         end: f.end,
@@ -994,7 +1019,6 @@ export default function OwnerShiftManagementPage() {
         notes: f.notes.trim() || undefined,
       },
     ]);
-
     setCalendar((prev) => ({
       ...prev,
       [f.date]: {
