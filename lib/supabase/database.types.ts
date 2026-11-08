@@ -250,6 +250,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_workers: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          employee_number: number
+          first_name: string
+          last_name: string
+          phone_number: string | null
+          account_status: string
+        }[]
+      }
     }
     Enums: {
       app_permission:

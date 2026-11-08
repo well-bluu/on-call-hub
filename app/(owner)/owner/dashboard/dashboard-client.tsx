@@ -9,12 +9,10 @@ import {
   Calendar,
   CheckCircle2,
   CircleUserRound,
-  User,
   UserX,
 } from "lucide-react";
-
-// HARD-CODED DATA - CHANGE LATER
-const OWNER_NAME = "Mrs. ARENAL!";
+import { createClient } from "@/lib/supabase/client";
+import { fmtClock, fmtLongDate, timeAgo, toLocalKey } from "@/lib/shifts/format";
 
 const HERO_SLIDES = [
   { subtitle: "Here's your overview for today.", image: dashboardBanner1 },
@@ -23,15 +21,7 @@ const HERO_SLIDES = [
 ];
 const SLIDE_INTERVAL_MS = 5000; // Auto-slide speed
 
-const WEEK_DAYS = [
-  { label: "SUN", hasShift: true },
-  { label: "MON", hasShift: true },
-  { label: "TUE", hasShift: true },
-  { label: "WED", hasShift: false },
-  { label: "THU", hasShift: false },
-  { label: "FRI", hasShift: false },
-  { label: "SAT", hasShift: true },
-];
+const WEEK_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 type ShiftStatus = "COMPLETE" | "PENDING";
 
@@ -39,41 +29,116 @@ type ShiftStatus = "COMPLETE" | "PENDING";
 const TODAY_COLS = "1.2fr 1.4fr 1fr 1fr";
 const UPCOMING_COLS = "1.2fr 1.2fr 1fr 0.8fr 1fr";
 
-const TODAYS_SHIFTS: {
-  id: number;
-  time: string;
-  assigned: number;
-  required: number;
-  status: ShiftStatus;
-}[] = [
-  { id: 1, time: "6:00 AM - 5:00 PM", assigned: 4, required: 4, status: "COMPLETE" },
-  { id: 2, time: "6:00 AM - 5:00 PM", assigned: 2, required: 4, status: "PENDING" },
-];
-
-const UPCOMING_SHIFTS: {
-  id: number;
-  date: string;
-  time: string;
-  filled: number;
-  required: number;
-  task: string;
-  status: ShiftStatus;
-}[] = [
-  { id: 1, date: "JULY 21, 2026", time: "6:00 AM - 5:00 PM", filled: 4, required: 4, task: "COATING", status: "COMPLETE" },
-  { id: 2, date: "JULY 22, 2026", time: "6:00 AM - 5:00 PM", filled: 2, required: 4, task: "MIXING", status: "PENDING" },
-];
-
 const WORKER_SUMMARY = [
-  { icon: CheckCircle2, value: "2", label: "ACTIVE", box: "bg-[#E3F4E6] border-[#1A9E3A]", iconColor: "text-[#1A9E3A]" },
-  { icon: UserX, value: "2", label: "INACTIVE", box: "bg-slate-100 border-slate-400", iconColor: "text-slate-500" },
+  { icon: CheckCircle2, value: "0", label: "ACTIVE", box: "bg-[#E3F4E6] border-[#1A9E3A]", iconColor: "text-[#1A9E3A]" },
+  { icon: UserX, value: "0", label: "INACTIVE", box: "bg-slate-100 border-slate-400", iconColor: "text-slate-500" },
 ];
 
-const RECENT_ACTIVITY = [
-  { id: 1, icon: Calendar, iconBox: "bg-[#E3F4E6] text-[#1A9E3A]", title: "WORKER ACCEPTED", titleColor: "text-[#1A9E3A]", description: "Wrapping of Pinipig", time: "Today • 2 mins ago" },
-  { id: 2, icon: User, iconBox: "bg-[#FEF3E6] text-[#FD950F]", title: "PROFILE UPDATED BY...", titleColor: "text-[hsl(var(--dark-blue))]", description: "Description", time: "Today • 2 mins ago" },
-  { id: 3, icon: Calendar, iconBox: "bg-[#E3F4E6] text-[#1A9E3A]", title: "TEXT", titleColor: "text-[#1A9E3A]", description: "Description", time: "Today • 2 mins ago" },
-  { id: 4, icon: Calendar, iconBox: "bg-[#E3F4E6] text-[#1A9E3A]", title: "TEXT", titleColor: "text-[#1A9E3A]", description: "Description", time: "Today • 2 mins ago" },
-];
+const ACTIVITY_STYLE: Record<string, { iconBox: string; titleColor: string }> = {
+  accepted: { iconBox: "bg-[#E3F4E6] text-[#1A9E3A]", titleColor: "text-[#1A9E3A]" },
+  declined: { iconBox: "bg-[#FEF3E6] text-[#FD950F]", titleColor: "text-[#FD950F]" },
+  expired: { iconBox: "bg-[#FEF3E6] text-[#FD950F]", titleColor: "text-[#FD950F]" },
+  cancelled: { iconBox: "bg-slate-100 text-slate-500", titleColor: "text-slate-500" },
+};
+
+type DashboardData = {
+  ownerName: string;
+  weekDays: { label: string; hasShift: boolean }[];
+  todaysShifts: { id: string; time: string; assigned: number; required: number; status: ShiftStatus }[];
+  upcomingShifts: { id: string; date: string; time: string; filled: number; required: number; task: string; status: ShiftStatus }[];
+  workerCounts: { active: number; inactive: number };
+  recentActivity: { id: string; icon: typeof Calendar; iconBox: string; title: string; titleColor: string; description: string; time: string }[];
+};
+
+const EMPTY_DASHBOARD: DashboardData = {
+  ownerName: "",
+  weekDays: WEEK_LABELS.map((label) => ({ label, hasShift: false })),
+  todaysShifts: [],
+  upcomingShifts: [],
+  workerCounts: { active: 0, inactive: 0 },
+  recentActivity: [],
+};
+
+const statusOf = (status: string): ShiftStatus =>
+  status === "filled" || status === "completed" ? "COMPLETE" : "PENDING";
+
+async function loadDashboard(): Promise<DashboardData> {
+  const supabase = createClient();
+  const now = new Date();
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+  const todayKey = toLocalKey(now);
+  const { data: { user } } = await supabase.auth.getUser();
+  const [profileRes, shiftsRes, workersRes, activityRes] = await Promise.all([
+    supabase.from("profiles").select("first_name").eq("id", user?.id ?? "").maybeSingle(),
+    supabase
+      .from("shifts")
+      .select("id, shift_name, starts_at, ends_at, required_workers, status, shift_assignments(response_status)")
+      .neq("status", "cancelled")
+      .gte("ends_at", weekStart.toISOString())
+      .order("starts_at"),
+    supabase.rpc("list_workers"),
+    supabase
+      .from("shift_assignments")
+      .select("id, worker_id, response_status, responded_at, shifts!inner(shift_name)")
+      .not("responded_at", "is", null)
+      .order("responded_at", { ascending: false })
+      .limit(4),
+  ]);
+  if (profileRes.error || shiftsRes.error || workersRes.error || activityRes.error) {
+    throw profileRes.error ?? shiftsRes.error ?? workersRes.error ?? activityRes.error;
+  }
+
+  const shifts = shiftsRes.data.map((shift) => {
+    const start = new Date(shift.starts_at);
+    const end = new Date(shift.ends_at);
+    return {
+      id: shift.id,
+      key: toLocalKey(start),
+      start,
+      time: `${fmtClock(start)} - ${fmtClock(end)}`,
+      name: shift.shift_name,
+      required: shift.required_workers,
+      accepted: shift.shift_assignments.filter((a) => a.response_status === "accepted").length,
+      status: statusOf(shift.status),
+    };
+  });
+  const workers = workersRes.data ?? [];
+  const names = new Map(workers.map((worker) => [worker.id, `${worker.first_name ?? ""} ${worker.last_name ?? ""}`.trim()]));
+  const active = workers.filter((worker) => worker.account_status === "active").length;
+
+  return {
+    ownerName: `${(profileRes.data?.first_name ?? "").toUpperCase()}!`,
+    weekDays: WEEK_LABELS.map((label, index) => {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + index);
+      return { label, hasShift: shifts.some((shift) => shift.key === toLocalKey(date)) };
+    }),
+    todaysShifts: shifts
+      .filter((shift) => shift.key === todayKey)
+      .map((shift) => ({ id: shift.id, time: shift.time, assigned: shift.accepted, required: shift.required, status: shift.status })),
+    upcomingShifts: shifts
+      .filter((shift) => shift.start >= now)
+      .slice(0, 5)
+      .map((shift) => ({
+        id: shift.id,
+        date: fmtLongDate(shift.start),
+        time: shift.time,
+        filled: shift.accepted,
+        required: shift.required,
+        task: shift.name.toUpperCase(),
+        status: shift.status,
+      })),
+    workerCounts: { active, inactive: workers.length - active },
+    recentActivity: (activityRes.data ?? []).map((activity) => ({
+      id: activity.id,
+      icon: Calendar,
+      ...(ACTIVITY_STYLE[activity.response_status] ?? ACTIVITY_STYLE.cancelled),
+      title: `WORKER ${activity.response_status.toUpperCase()}`,
+      description: `${names.get(activity.worker_id) || "A worker"} · ${activity.shifts.shift_name}`,
+      time: timeAgo(activity.responded_at!),
+    })),
+  };
+}
 
 // Row / badge colors based on shift status
 const STATUS_STYLES: Record<
@@ -107,6 +172,22 @@ function HeaderPill({ children }: { children: React.ReactNode }) {
 
 export default function OwnerDashboardPage() {
   const [slideIndex, setSlideIndex] = useState(0);
+  const [data, setData] = useState<DashboardData>(EMPTY_DASHBOARD);
+
+  useEffect(() => {
+    let alive = true;
+    void loadDashboard().then((dashboard) => {
+      if (alive) setData(dashboard);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const workerSummary = [
+    { ...WORKER_SUMMARY[0], value: String(data.workerCounts.active) },
+    { ...WORKER_SUMMARY[1], value: String(data.workerCounts.inactive) },
+  ];
 
   // Hero carousel auto-slide
   useEffect(() => {
@@ -141,7 +222,7 @@ export default function OwnerDashboardPage() {
           <div className="max-w-sm">
             <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-[hsl(var(--dark-blue))]">
               GOOD DAY, <br />
-              {OWNER_NAME}
+              {data.ownerName}
             </h1>
             <p className="mt-3 text-sm text-[hsl(var(--dark-blue))]">
               {slide.subtitle}
@@ -177,7 +258,7 @@ export default function OwnerDashboardPage() {
           </div>
 
           <div className="grid grid-cols-7 gap-3">
-            {WEEK_DAYS.map((d) => (
+            {data.weekDays.map((d) => (
               <div
                 key={d.label}
                 className={`h-16 rounded-md border p-1.5 text-[10px] font-bold text-[hsl(var(--dark-blue))] ${
@@ -214,7 +295,7 @@ export default function OwnerDashboardPage() {
 
           {/* Table rows */}
           <div className="flex flex-col gap-3">
-            {TODAYS_SHIFTS.map((s) => {
+            {data.todaysShifts.map((s) => {
               const style = STATUS_STYLES[s.status];
               return (
                 <div
@@ -245,6 +326,9 @@ export default function OwnerDashboardPage() {
                 </div>
               );
             })}
+            {data.todaysShifts.length === 0 && (
+              <p className="py-4 text-center text-xs text-slate-500">No shifts today.</p>
+            )}
           </div>
         </div>
 
@@ -271,7 +355,7 @@ export default function OwnerDashboardPage() {
 
           {/* Table rows */}
           <div className="flex flex-col gap-3">
-            {UPCOMING_SHIFTS.map((s) => {
+            {data.upcomingShifts.map((s) => {
               const style = STATUS_STYLES[s.status];
               return (
                 <div
@@ -295,6 +379,9 @@ export default function OwnerDashboardPage() {
                 </div>
               );
             })}
+            {data.upcomingShifts.length === 0 && (
+              <p className="py-4 text-center text-xs text-slate-500">No upcoming shifts.</p>
+            )}
           </div>
         </div>
       </div>
@@ -309,7 +396,7 @@ export default function OwnerDashboardPage() {
             WORKER SUMMARY
           </h3>
           <div className="grid grid-cols-2 gap-3">
-            {WORKER_SUMMARY.map((item) => {
+            {workerSummary.map((item) => {
               const Icon = item.icon;
               return (
                 <div
@@ -342,7 +429,7 @@ export default function OwnerDashboardPage() {
           </div>
 
           <div className="flex flex-col gap-5">
-            {RECENT_ACTIVITY.map((a) => {
+            {data.recentActivity.map((a) => {
               const Icon = a.icon;
               return (
                 <div key={a.id} className="flex items-start gap-3">
@@ -359,6 +446,9 @@ export default function OwnerDashboardPage() {
                 </div>
               );
             })}
+            {data.recentActivity.length === 0 && (
+              <p className="py-4 text-center text-xs text-slate-500">No recent activity.</p>
+            )}
           </div>
         </div>
       </div>
