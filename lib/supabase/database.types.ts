@@ -235,6 +235,10 @@ export type Database = {
         Args: { p_assignment_id: string }
         Returns: undefined
       }
+      cancel_shift: {
+        Args: { p_shift_id: string }
+        Returns: undefined
+      }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       decline_shift_offer: {
         Args: { p_assignment_id: string }
