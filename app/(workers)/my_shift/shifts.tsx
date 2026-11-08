@@ -1,25 +1,22 @@
 "use client";
 
-import {Fragment, useState} from "react";
+import {Fragment, useCallback, useEffect, useState} from "react";
 import bannerImage from "@/components/assets/images/my-shifts.png";
 import WorkerSummary from "@/components/workerSummary";
 import Banner from "./ShiftBanner";
 import RecentActivity from "@/components/worker-activity";
+import {
+	groupByTab,
+	loadMyShifts,
+	respondToOffer,
+	type MyShift,
+	type OfferStatus,
+	type OfferTab,
+} from "@/lib/shifts/my-offers";
 
-type TabKey = "upcoming" | "requests" | "past" | "cancelled";
-type ShiftStatus =
-	| "accepted"
-	| "pending"
-	| "declined"
-	| "expired"
-	| "cancelled";
-
-interface Shift {
-	date: string;
-	time: string;
-	task: string;
-	status: ShiftStatus;
-}
+type TabKey = OfferTab;
+type ShiftStatus = OfferStatus;
+type Shift = MyShift;
 
 const TABS: {key: TabKey; label: string}[] = [
 	{key: "upcoming", label: "UPCOMING SHIFTS"},
@@ -27,32 +24,6 @@ const TABS: {key: TabKey; label: string}[] = [
 	{key: "past", label: "PAST SHIFTS"},
 	{key: "cancelled", label: "CANCELLED SHIFTS"},
 ];
-
-const SHIFTS: Record<TabKey, Shift[]> = {
-	upcoming: [
-		{
-			date: "2026-09-21",
-			time: "6:00 AM - 5:00 PM",
-			task: "COATING",
-			status: "accepted",
-		},
-		{
-			date: "2026-09-22",
-			time: "6:00 AM - 5:00 PM",
-			task: "MIXING",
-			status: "pending",
-		},
-		{
-			date: "2026-09-23",
-			time: "6:00 AM - 5:00 PM",
-			task: "COATING",
-			status: "pending",
-		},
-	],
-	requests: [],
-	past: [],
-	cancelled: [],
-};
 
 const STATUS_STYLES: Record<ShiftStatus, {label: string; pill: string}> = {
 	accepted: {
@@ -108,13 +79,73 @@ function StatusPill({status}: {status: ShiftStatus}) {
 	);
 }
 
+function OfferActions({
+	shift,
+	busy,
+	onRespond,
+}: {
+	shift: Shift;
+	busy: boolean;
+	onRespond: (assignmentId: string, action: "accept" | "decline") => void;
+}) {
+	return (
+		<div className="flex flex-wrap justify-center gap-1">
+			<button
+				type="button"
+				disabled={busy}
+				onClick={() => onRespond(shift.assignmentId, "accept")}
+				className="rounded-full bg-[#1FAA59] px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50">
+				ACCEPT
+			</button>
+			<button
+				type="button"
+				disabled={busy}
+				onClick={() => onRespond(shift.assignmentId, "decline")}
+				className="rounded-full bg-[#FBDEDE] px-2 py-1 text-[10px] font-bold text-[#FF0000] disabled:opacity-50">
+				DECLINE
+			</button>
+		</div>
+	);
+}
+
 // Breakpoint notes: the sidebar takes ~320px on desktop, so the page content
 // is much narrower than the viewport. That's why the side column starts at
 // `xl` and the table (instead of cards) starts at `lg`.
 
 export default function MyShiftPage() {
 	const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
-	const rows = SHIFTS[activeTab];
+	const [shifts, setShifts] = useState<Record<TabKey, Shift[]>>({
+		upcoming: [],
+		requests: [],
+		past: [],
+		cancelled: [],
+	});
+	const [loading, setLoading] = useState(true);
+	const [message, setMessage] = useState("");
+	const [busyId, setBusyId] = useState<string | null>(null);
+
+	const load = useCallback(async () => {
+		try {
+			setShifts(groupByTab(await loadMyShifts(), Date.now()));
+		} catch {
+			setMessage("Could not load your shifts. Please refresh the page.");
+		}
+		setLoading(false);
+	}, []);
+
+	useEffect(() => {
+		void load();
+	}, [load]);
+
+	const respond = async (assignmentId: string, action: "accept" | "decline") => {
+		setBusyId(assignmentId);
+		setMessage("");
+		setMessage(await respondToOffer(assignmentId, action));
+		await load();
+		setBusyId(null);
+	};
+
+	const rows = shifts[activeTab];
 
 	return (
 		<div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_260px]">
@@ -125,6 +156,12 @@ export default function MyShiftPage() {
 					title={"MY SHIFTS"}
 					description={"View and manage your shifts"}
 				/>
+
+				{message && (
+					<p className="rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-[hsl(var(--dark-blue))]">
+						{message}
+					</p>
+				)}
 
 				{/* Shifts card */}
 				<div className="min-w-0 rounded-xl border border-border bg-white shadow-sm">
@@ -160,12 +197,12 @@ export default function MyShiftPage() {
 						<div className="flex flex-col gap-3 lg:hidden">
 							{rows.length === 0 ? (
 								<p className="py-8 text-center text-sm text-neutral-400">
-									No shifts to show here yet.
+									{loading ? "Loading..." : "No shifts to show here yet."}
 								</p>
 							) : (
 								rows.map((shift) => (
 									<div
-										key={`${shift.date}-${shift.task}`}
+										key={shift.assignmentId}
 										className="rounded-lg border border-neutral-300 p-3 text-xs text-[hsl(var(--dark-blue))]">
 										<div className="flex items-start justify-between gap-2">
 											<div className="min-w-0">
@@ -174,7 +211,15 @@ export default function MyShiftPage() {
 													{formatWeekday(shift.date)}
 												</p>
 											</div>
-											<StatusPill status={shift.status} />
+											{shift.status === "pending" ? (
+												<OfferActions
+													shift={shift}
+													busy={busyId === shift.assignmentId}
+													onRespond={respond}
+												/>
+											) : (
+												<StatusPill status={shift.status} />
+											)}
 										</div>
 
 										<div className="mt-2 flex items-center justify-between gap-2 border-t border-neutral-200 pt-2 font-semibold">
@@ -217,7 +262,7 @@ export default function MyShiftPage() {
 								{rows.length === 0 ? (
 									<tr>
 										<td colSpan={5} className="py-10 text-sm text-neutral-400">
-											No shifts to show here yet.
+											{loading ? "Loading..." : "No shifts to show here yet."}
 										</td>
 									</tr>
 								) : (
@@ -226,7 +271,7 @@ export default function MyShiftPage() {
 											"whitespace-normal break-words border-y border-neutral-300 px-1 py-3 align-middle font-semibold";
 
 										return (
-											<Fragment key={`${shift.date}-${shift.task}`}>
+											<Fragment key={shift.assignmentId}>
 												{/* Gap only between shift rows */}
 												{index > 0 && (
 													<tr aria-hidden="true">
@@ -248,7 +293,15 @@ export default function MyShiftPage() {
 													<td className={cellStyle}>{shift.task}</td>
 
 													<td className={`${cellStyle} rounded-r-lg border-r`}>
-														<StatusPill status={shift.status} />
+														{shift.status === "pending" ? (
+															<OfferActions
+																shift={shift}
+																busy={busyId === shift.assignmentId}
+																onRespond={respond}
+															/>
+														) : (
+															<StatusPill status={shift.status} />
+														)}
 													</td>
 												</tr>
 											</Fragment>

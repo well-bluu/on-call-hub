@@ -7,3 +7,10 @@ export function toLocalKey(date: Date) {
 export function toLocalTime(date: Date) {
 	return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+export function fmtClock(date: Date) {
+	return date.toLocaleTimeString("en-US", {
+		hour: "numeric",
+		minute: "2-digit",
+	});
+}
