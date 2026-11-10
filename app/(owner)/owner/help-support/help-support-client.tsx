@@ -1,3 +1,4 @@
+
 "use client";
 
 import bannerImage from "@/components/assets/images/help-support-banner.png";
@@ -14,7 +15,58 @@ import {
   Book,
 } from "lucide-react";
 
-// FAQS Layout
+// ==========================================
+// BANNER
+// ==========================================
+
+
+function Banner({ image }: { image: typeof bannerImage }) {
+  return (
+    <section
+      className="relative flex min-h-[145px] items-center overflow-hidden rounded-2xl border border-[#D9D9D9] px-5 py-5 shadow-sm sm:min-h-[165px] sm:px-8 lg:min-h-[175px]"
+      style={{
+        backgroundImage: `
+          linear-gradient(
+            90deg,
+            rgba(255,255,255,0.98) 0%,
+            rgba(255,255,255,0.95) 25%,
+            rgba(255,255,255,0.88) 40%,
+            rgba(255,255,255,0.70) 55%,
+            rgba(255,255,255,0.40) 70%,
+            rgba(255,255,255,0.12) 85%,
+            rgba(255,255,255,0) 100%
+          ),
+          url(${image.src})
+        `,
+        backgroundSize: "100% 100%, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
+      }}
+    >
+      <div className="relative z-10 max-w-[70%] sm:max-w-sm">
+       <h1 className="whitespace-nowrap text-2xl font-extrabold uppercase leading-tight text-[hsl(var(--dark-blue))] sm:text-3xl lg:text-4xl">
+          HELP &amp; SUPPORT
+      </h1>
+
+        <p className="mt-2 text-[11px] font-medium leading-relaxed text-[hsl(var(--dark-blue))] sm:text-sm">
+          Get assistance, report issues, and find answers{" "}
+          <span className="sm:hidden">
+            to common questions.
+          </span>
+          <span className="hidden sm:inline">
+            <br />
+            to common questions.
+          </span>
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
+// FAQS
+// ==========================================
+
 const FAQS = [
   {
     icon: PlusCircle,
@@ -58,11 +110,19 @@ const FAQS = [
   },
 ];
 
+// ==========================================
+// DOCUMENTATION RESOURCES
+// ==========================================
+
 const RESOURCES = [
   { icon: FileText, label: "Owner Manual", type: "PDF" },
   { icon: ShieldCheck, label: "Shift Management", type: "PDF" },
   { icon: Book, label: "Worker Management", type: "PDF" },
 ];
+
+// ==========================================
+// PAGE
+// ==========================================
 
 export default function OwnerHelpSupportPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -71,23 +131,9 @@ export default function OwnerHelpSupportPage() {
     <div className="grid w-full min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_260px] xl:gap-5">
       {/* LEFT SIDE */}
       <div className="flex min-w-0 flex-col gap-6">
-        {/* HERO BANNER */}
-        <div
-          className="relative overflow-hidden rounded-2xl border border-[#D9D9D9] bg-cover bg-[position:40%_center] p-5 shadow-sm sm:p-6 lg:p-8 xl:shadow-none"
-          style={{ backgroundImage: `url(${bannerImage.src})` }}
-        >
-          <div className="max-w-sm xl:max-w-lg">
-            <h1 className="text-lg font-bold tracking-tight text-[hsl(var(--dark-blue))] sm:text-xl xl:text-3xl xl:font-extrabold">
-              HELP &amp; SUPPORT
-            </h1>
 
-            <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--dark-blue))] sm:text-sm">
-              Get assistance, report issues, and find answers{" "}
-              <br className="hidden xl:block" />
-              to common questions.
-            </p>
-          </div>
-        </div>
+        {/* HERO BANNER */}
+        <Banner image={bannerImage} />
 
         {/* FREQUENTLY ASKED QUESTIONS */}
         <section className="flex flex-col gap-5 xl:gap-4">
@@ -119,6 +165,7 @@ export default function OwnerHelpSupportPage() {
                     className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left sm:px-6 sm:py-6 xl:p-4"
                   >
                     <div className="flex min-w-0 items-center gap-4 sm:gap-5 xl:gap-3">
+
                       {/* FAQ ICON */}
                       <span
                         className={`flex size-11 shrink-0 items-center justify-center rounded-lg sm:size-14 xl:size-9 xl:rounded-md ${faq.iconBg}`}
@@ -162,6 +209,7 @@ export default function OwnerHelpSupportPage() {
 
       {/* RIGHT SIDE */}
       <div className="flex min-w-0 flex-col gap-6 xl:gap-4">
+
         {/* DOCUMENTATION RESOURCES */}
         <section className="min-w-0 rounded-xl border border-border bg-white p-4 shadow-[0_2px_6px_rgba(0,0,0,0.12)] sm:p-6 xl:p-5 xl:shadow-none">
           <h3 className="mb-5 text-sm font-bold tracking-wide text-[hsl(var(--dark-blue))] sm:text-lg xl:mb-4 xl:text-sm">
@@ -185,7 +233,7 @@ export default function OwnerHelpSupportPage() {
                     />
                   </span>
 
-                  {/* RESOURCE NAME (xl: label on row 1, "(PDF)" on row 2) */}
+                  {/* RESOURCE NAME */}
                   <div className="min-w-0 flex-1 xl:contents">
                     <p className="text-[12px] font-semibold leading-tight text-[hsl(var(--dark-blue))] sm:text-lg xl:contents xl:text-xs xl:font-bold">
                       <span className="xl:col-span-2 xl:col-start-2 xl:row-start-1 xl:break-words">

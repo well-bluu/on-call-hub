@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -30,6 +31,7 @@ import {
 } from "lucide-react";
 
 import bannerImage from "@/components/assets/images/workerBanner.png";
+import { createClient } from "@/lib/supabase/client";
 
 // ==========================================
 // WORKER AND ACTIVITY TYPES
@@ -46,6 +48,13 @@ interface Worker {
   status: WorkerStatus;
 }
 
+interface WorkerRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  account_status: string | null;
+}
+
 interface Activity {
   id: string;
   title: string;
@@ -54,17 +63,54 @@ interface Activity {
   tone: "green" | "orange";
 }
 
+type SummaryItem = {
+  icon: typeof CheckCircle2;
+  value: string;
+  label: string;
+  webLabel: string;
+  box: string;
+  iconColor: string;
+};
+
 // ==========================================
-// SAMPLE DATA
+// WORKER SUMMARY CARD DEFINITIONS
+// Same definitions as the Owner Dashboard
 // ==========================================
 
-const INITIAL_WORKERS: Worker[] = Array.from({ length: 5 }, (_, i) => ({
-  id: String(i + 1),
-  name: `Worker ${i + 1}`,
-  contact: "00000000000",
-  availability: "Available",
-  status: "Active",
-}));
+const WORKER_SUMMARY: Omit<SummaryItem, "value">[] = [
+  {
+    icon: CalendarCheck,
+    label: "ACTIVE",
+    webLabel: "AVAILABLE",
+    box: "bg-[#E7F0FF] border-[#0050D3]",
+    iconColor: "text-[#0050D3]",
+  },
+  {
+    icon: Cross,
+    label: "INACTIVE",
+    webLabel: "ON LEAVE",
+    box: "bg-[#FCE5E5] border-[#FF0000]",
+    iconColor: "text-[#FF0000]",
+  },
+  {
+    icon: CheckCircle2,
+    label: "TEXT",
+    webLabel: "TEXT",
+    box: "bg-[#E3F4E6] border-[#009B25]",
+    iconColor: "text-[#009B25]",
+  },
+  {
+    icon: Clock3,
+    label: "BUSY",
+    webLabel: "BUSY",
+    box: "bg-[#FFF2E2] border-[#FF9500]",
+    iconColor: "text-[#FF9500]",
+  },
+];
+
+// ==========================================
+// SAMPLE RECENT ACTIVITY
+// ==========================================
 
 const ACTIVITIES: Activity[] = [
   {
@@ -156,8 +202,7 @@ function Banner({ image }: { image: StaticImageData }) {
         >
           Keep track of your team and manage worker{" "}
           <span className="sm:hidden">
-            details{" "}
-            <br />
+            details <br />
           </span>
           <span className="hidden sm:inline">
             <br />
@@ -172,85 +217,48 @@ function Banner({ image }: { image: StaticImageData }) {
 
 // ==========================================
 // WORKER SUMMARY
-// COPIED FROM DASHBOARD
 // ==========================================
 
-// `label` is used on mobile, `webLabel` is used on the web (desktop) version.
-const WORKER_SUMMARY = [
-  {
-    icon: CalendarCheck,
-    value: "2",
-    label: "ACTIVE",
-    webLabel: "AVAILABLE",
-    box: "bg-[#E7F0FF] border-[#0050D3]",
-    iconColor: "text-[#0050D3]",
-  },
-  {
-    icon: Cross,
-    value: "2",
-    label: "INACTIVE",
-    webLabel: "ON LEAVE",
-    box: "bg-[#FCE5E5] border-[#FF0000]",
-    iconColor: "text-[#FF0000]",
-  },
-  {
-    icon: CheckCircle2,
-    value: "2",
-    label: "TEXT",
-    webLabel: "TEXT",
-    box: "bg-[#E3F4E6] border-[#009B25]",
-    iconColor: "text-[#009B25]",
-  },
-  {
-    icon: Clock3,
-    value: "2",
-    label: "BUSY",
-    webLabel: "BUSY",
-    box: "bg-[#FFF2E2] border-[#FF9500]",
-    iconColor: "text-[#FF9500]",
-  },
-];
+function WorkerSummary({
+  active,
+  inactive,
+}: {
+  active: number;
+  inactive: number;
+}) {
+  const summary: SummaryItem[] = [
+    { ...WORKER_SUMMARY[0], value: String(active) },
+    { ...WORKER_SUMMARY[1], value: String(inactive) },
+    { ...WORKER_SUMMARY[2], value: "0" },
+    { ...WORKER_SUMMARY[3], value: "0" },
+  ];
 
-function WorkerSummary() {
   return (
     <section className="rounded-xl border border-border bg-white p-4 shadow-[0_2px_6px_rgba(0,0,0,0.12)] sm:p-5">
-      <h3
-        className={`mb-4 text-left text-[15px] font-bold sm:text-[16px] lg:text-center lg:text-sm lg:tracking-wide ${navy}`}
-      >
+      <h3 className="mb-4 text-left text-[15px] font-bold text-[hsl(var(--dark-blue))] sm:text-[16px] lg:text-center lg:text-sm lg:tracking-wide">
         WORKER SUMMARY
       </h3>
 
-      {/* MOBILE VIEW (unchanged layout) */}
-
+      {/* MOBILE AND TABLET VIEW */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:hidden">
-        {WORKER_SUMMARY.map((item) => {
+        {summary.map((item) => {
           const Icon = item.icon;
 
           return (
             <div
               key={item.label}
-              className={`
-                flex aspect-square min-w-0
-                flex-col items-center justify-center
-                rounded-[22px] border-[0.75px]
-                px-1 py-2
-                ${item.box}
-              `}
+              className={`flex aspect-square min-w-0 flex-col items-center justify-center rounded-[22px] border-[0.75px] px-1 py-2 ${item.box}`}
             >
               <Icon
                 className={`h-6 w-6 shrink-0 sm:h-8 sm:w-8 ${item.iconColor}`}
                 strokeWidth={2.2}
               />
 
-              <p
-                className={`mt-1 text-lg font-extrabold leading-none sm:text-2xl ${navy}`}
-              >
+              <p className="mt-1 text-lg font-extrabold leading-none text-[hsl(var(--dark-blue))] sm:text-2xl">
                 {item.value}
               </p>
 
-              <p
-                className={`mt-1 text-center text-[8px] font-extrabold leading-tight sm:text-[11px] ${navy}`}
-              >
+              <p className="mt-1 text-center text-[8px] font-extrabold leading-tight text-[hsl(var(--dark-blue))] sm:text-[11px]">
                 {item.label}
               </p>
             </div>
@@ -258,33 +266,26 @@ function WorkerSummary() {
         })}
       </div>
 
-      {/* WEB VIEW (2 x 2 grid, same sizing as the worker's summary) */}
-
+      {/* DESKTOP VIEW */}
       <div className="hidden grid-cols-2 gap-4 lg:grid">
-        {WORKER_SUMMARY.map((item) => {
+        {summary.map((item) => {
           const Icon = item.icon;
 
           return (
             <div
-              key={item.webLabel}
-              className={`
-                flex h-[88px] min-w-0
-                flex-col items-center justify-center
-                rounded-xl border
-                ${item.box}
-              `}
+              key={item.label}
+              className={`flex h-[88px] min-w-0 flex-col items-center justify-center rounded-xl border ${item.box}`}
             >
               <Icon
                 className={`mb-1 h-7 w-7 shrink-0 ${item.iconColor}`}
+                strokeWidth={2.2}
               />
 
-              <span className={`text-xl font-bold leading-none ${navy}`}>
+              <span className="text-xl font-bold leading-none text-[hsl(var(--dark-blue))]">
                 {item.value}
               </span>
 
-              <span
-                className={`mt-1 text-center text-[10px] font-bold ${navy}`}
-              >
+              <span className="mt-1 text-center text-[10px] font-bold text-[hsl(var(--dark-blue))]">
                 {item.webLabel}
               </span>
             </div>
@@ -830,7 +831,6 @@ export function WorkersTable({
       </div>
 
       {/* MOBILE CARD VIEW */}
-
       <div className="flex flex-col gap-3 px-4 pb-4 md:hidden">
         {workers.length === 0 && (
           <p className="rounded-lg bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
@@ -918,7 +918,6 @@ export function WorkersTable({
       </div>
 
       {/* TABLE VIEW FOR TABLET AND DESKTOP */}
-
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[700px] table-fixed">
           <colgroup>
@@ -1027,7 +1026,54 @@ export function WorkersTable({
 // ==========================================
 
 export default function OwnerWorkersPage() {
-  const [workers, setWorkers] = useState(INITIAL_WORKERS);
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [loadingWorkers, setLoadingWorkers] = useState(true);
+
+  // Load workers using the same Supabase RPC as the Owner Dashboard.
+  useEffect(() => {
+    let alive = true;
+
+    async function loadWorkers() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("list_workers");
+
+        if (error) throw error;
+
+        const rows = (data ?? []) as WorkerRow[];
+
+        const mappedWorkers: Worker[] = rows.map((worker) => {
+          const name =
+            `${worker.first_name ?? ""} ${worker.last_name ?? ""}`.trim();
+
+          return {
+            id: worker.id,
+            name: name || "Unnamed Worker",
+            contact: "",
+            availability: "Available",
+            status:
+              worker.account_status === "active" ? "Active" : "Inactive",
+          };
+        });
+
+        if (alive) {
+          setWorkers(mappedWorkers);
+        }
+      } catch (error) {
+        console.error("Failed to load workers:", error);
+      } finally {
+        if (alive) {
+          setLoadingWorkers(false);
+        }
+      }
+    }
+
+    void loadWorkers();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const addWorker = (form: FormState) => {
     setWorkers((previous) => [
@@ -1048,39 +1094,55 @@ export default function OwnerWorkersPage() {
     );
   };
 
+  const activeWorkers = workers.filter(
+    (worker) => worker.status === "Active"
+  ).length;
+
+  const inactiveWorkers = workers.filter(
+    (worker) => worker.status === "Inactive"
+  ).length;
+
   return (
     <div className="flex min-w-0 flex-col gap-6 sm:gap-8 lg:gap-10">
       <div className="grid min-w-0 grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_17.75rem] lg:gap-6">
         {/* LEFT COLUMN */}
-
         <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
           <Banner image={bannerImage} />
 
           {/* MOBILE WORKER SUMMARY */}
-
           <div className="lg:hidden">
-            <WorkerSummary />
+            <WorkerSummary
+              active={activeWorkers}
+              inactive={inactiveWorkers}
+            />
           </div>
+
+          {loadingWorkers && (
+            <p className="text-center text-xs text-slate-500">
+              Loading workers...
+            </p>
+          )}
 
           <PersonalInformationForm onAdd={addWorker} />
 
           {/* MOBILE RECENT ACTIVITY */}
-
           <div className="lg:hidden">
             <RecentActivity items={ACTIVITIES} />
           </div>
         </div>
 
         {/* RIGHT COLUMN - DESKTOP */}
-
         <aside className="hidden min-w-0 flex-col gap-6 lg:flex">
-          <WorkerSummary />
+          <WorkerSummary
+            active={activeWorkers}
+            inactive={inactiveWorkers}
+          />
+
           <RecentActivity items={ACTIVITIES} />
         </aside>
       </div>
 
       {/* WORKERS LIST */}
-
       <WorkersTable
         workers={workers}
         onDelete={deleteWorker}

@@ -706,8 +706,6 @@ function AddShiftForm({onAdd}: {onAdd: (f: FormState) => Promise<void>}) {
 	);
 }
 
-const GRID = "grid grid-cols-[191fr_220fr_213fr_185fr_146fr_150fr] items-center";
-
 const GRID =
   "grid grid-cols-[191fr_220fr_213fr_185fr_146fr] items-center";
 
