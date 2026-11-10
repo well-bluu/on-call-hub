@@ -128,11 +128,20 @@ function Banner({ image }: { image: StaticImageData }) {
           linear-gradient(
             90deg,
             rgba(255,255,255,0.96) 0%,
-            rgba(255,255,255,0.88) 90%,
-            rgba(255,255,255,0.12) 100%
+            rgba(255,255,255,0.94) 25%,
+            rgba(255,255,255,0.88) 35%,
+            rgba(255,255,255,0.74) 45%,
+            rgba(255,255,255,0.54) 55%,
+            rgba(255,255,255,0.32) 65%,
+            rgba(255,255,255,0.14) 75%,
+            rgba(255,255,255,0.04) 85%,
+            rgba(255,255,255,0) 100%
           ),
           url(${image.src})
         `,
+        backgroundSize: "100% 100%, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
       }}
     >
       <div className="relative z-10 max-w-[70%] sm:max-w-sm">
@@ -145,9 +154,16 @@ function Banner({ image }: { image: StaticImageData }) {
         <p
           className={`mt-2 text-[11px] font-medium leading-relaxed sm:text-sm ${navy}`}
         >
-          Keep track of your team and manage
-          <br />
-          worker details from one place.
+          Keep track of your team and manage worker{" "}
+          <span className="sm:hidden">
+            details{" "}
+            <br />
+          </span>
+          <span className="hidden sm:inline">
+            <br />
+            details{" "}
+          </span>
+          from one place.
         </p>
       </div>
     </section>
