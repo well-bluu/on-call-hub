@@ -1,7 +1,10 @@
 import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
+import type {Database} from "@/lib/supabase/database.types";
 
-export async function requirePermission(permission: string) {
+export type Permission = Database["public"]["Enums"]["app_permission"];
+
+export async function requirePermission(permission: Permission) {
 	const supabase = await createClient();
 
 	const {data, error} = await supabase.auth.getClaims();
