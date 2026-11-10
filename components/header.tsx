@@ -3,7 +3,7 @@ import { Bell, CircleUserRound } from "lucide-react";
 export default function Header() {
   return (
     <header className="flex items-center justify-between px-8 lg:px-12 py-6">
-      <h1 className="text-xl font-bold tracking-tight text-[hsl(var(--dark-blue))]">
+      <h1 className="ml-8 sm:ml-0 text-xl font-bold tracking-tight text-[hsl(var(--dark-blue))]">
         FRENS ICE CREAM
       </h1>
 

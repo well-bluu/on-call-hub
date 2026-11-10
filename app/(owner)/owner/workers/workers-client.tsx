@@ -5,8 +5,9 @@ import {
   useEffect,
   useRef,
   useState,
+  type ChangeEvent,
+  type FormEvent,
   type ReactNode,
-  type SubmitEvent,
 } from "react";
 import Link from "next/link";
 import type { StaticImageData } from "next/image";
@@ -18,26 +19,40 @@ import {
   CalendarCheck,
   CalendarDays,
   Check,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CircleCheck,
+  Clock3,
+  Cross,
   SquarePen,
   Trash2,
   User,
-  UserX,
 } from "lucide-react";
 
 import bannerImage from "@/components/assets/images/workerBanner.png";
+import { createClient } from "@/lib/supabase/client";
 
-/* Worker types */
+// ==========================================
+// WORKER AND ACTIVITY TYPES
+// ==========================================
+
+type Availability = "Available" | "On Leave" | "Busy";
 type WorkerStatus = "Active" | "Inactive";
 
 interface Worker {
   id: string;
   name: string;
   contact: string;
+  availability: Availability;
   status: WorkerStatus;
+}
+
+interface WorkerRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  account_status: string | null;
 }
 
 interface Activity {
@@ -48,18 +63,55 @@ interface Activity {
   tone: "green" | "orange";
 }
 
-/* TODO: Replace mock workers with database records */
-const INITIAL_WORKERS: Worker[] = Array.from(
-  { length: 5 },
-  (_, i) => ({
-    id: String(i + 1),
-    name: `Worker ${i + 1}`,
-    contact: "00000000000",
-    status: "Active",
-  })
-);
+type SummaryItem = {
+  icon: typeof CheckCircle2;
+  value: string;
+  label: string;
+  webLabel: string;
+  box: string;
+  iconColor: string;
+};
 
-/* TODO: Fetch activities and timestamps from database */
+// ==========================================
+// WORKER SUMMARY CARD DEFINITIONS
+// Same definitions as the Owner Dashboard
+// ==========================================
+
+const WORKER_SUMMARY: Omit<SummaryItem, "value">[] = [
+  {
+    icon: CalendarCheck,
+    label: "ACTIVE",
+    webLabel: "AVAILABLE",
+    box: "bg-[#E7F0FF] border-[#0050D3]",
+    iconColor: "text-[#0050D3]",
+  },
+  {
+    icon: Cross,
+    label: "INACTIVE",
+    webLabel: "ON LEAVE",
+    box: "bg-[#FCE5E5] border-[#FF0000]",
+    iconColor: "text-[#FF0000]",
+  },
+  {
+    icon: CheckCircle2,
+    label: "TEXT",
+    webLabel: "TEXT",
+    box: "bg-[#E3F4E6] border-[#009B25]",
+    iconColor: "text-[#009B25]",
+  },
+  {
+    icon: Clock3,
+    label: "BUSY",
+    webLabel: "BUSY",
+    box: "bg-[#FFF2E2] border-[#FF9500]",
+    iconColor: "text-[#FF9500]",
+  },
+];
+
+// ==========================================
+// SAMPLE RECENT ACTIVITY
+// ==========================================
+
 const ACTIVITIES: Activity[] = [
   {
     id: "a1",
@@ -91,156 +143,214 @@ const ACTIVITIES: Activity[] = [
   },
 ];
 
-/* Shared styles */
+// ==========================================
+// SHARED STYLES
+// ==========================================
+
 const card =
   "rounded-xl border border-[#D9D9D9] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)]";
 
 const navy = "text-[hsl(var(--dark-blue))]";
 
 const inputClass =
-  "h-10 w-full rounded-xl bg-[#E6EEFC] px-4 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-blue-700";
+  "h-10 w-full min-w-0 rounded-xl bg-[#E6EEFC] px-4 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-blue-700";
 
-/* Workers banner */
+const AVAILABILITY_STYLES: Record<Availability, string> = {
+  Available: "bg-[#E2F3E6] text-green-700",
+  "On Leave": "bg-red-100 text-red-600",
+  Busy: "bg-orange-100 text-orange-600",
+};
+
+// ==========================================
+// WORKERS PAGE BANNER
+// ==========================================
+
 function Banner({ image }: { image: StaticImageData }) {
   return (
-    <div
-      className={`flex h-[150px] items-center overflow-hidden bg-cover bg-[position:right_center] px-9 ${card}`}
-      style={{ backgroundImage: `url(${image.src})` }}
+    <section
+      className={`worker-banner relative flex min-h-[145px] items-center overflow-hidden px-5 py-5 sm:min-h-[165px] sm:px-8 lg:min-h-[175px] ${card}`}
+      style={{
+        backgroundImage: `
+          linear-gradient(
+            90deg,
+            rgba(255,255,255,0.96) 0%,
+            rgba(255,255,255,0.94) 25%,
+            rgba(255,255,255,0.88) 35%,
+            rgba(255,255,255,0.74) 45%,
+            rgba(255,255,255,0.54) 55%,
+            rgba(255,255,255,0.32) 65%,
+            rgba(255,255,255,0.14) 75%,
+            rgba(255,255,255,0.04) 85%,
+            rgba(255,255,255,0) 100%
+          ),
+          url(${image.src})
+        `,
+        backgroundSize: "100% 100%, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
+      }}
     >
-      <div className="max-w-sm">
+      <div className="relative z-10 max-w-[70%] sm:max-w-sm">
         <h1
-          className={`text-4xl font-extrabold uppercase leading-none ${navy}`}
+          className={`text-2xl font-extrabold uppercase leading-tight sm:text-3xl lg:text-4xl ${navy}`}
         >
           Workers
         </h1>
 
-        <p className={`mt-2 text-sm font-medium ${navy}`}>
-          Keep track of your team and manage <br />
-          worker details from one place.
+        <p
+          className={`mt-2 text-[11px] font-medium leading-relaxed sm:text-sm ${navy}`}
+        >
+          Keep track of your team and manage worker{" "}
+          <span className="sm:hidden">
+            details <br />
+          </span>
+          <span className="hidden sm:inline">
+            <br />
+            details{" "}
+          </span>
+          from one place.
         </p>
-      </div>
-    </div>
-  );
-}
-
-/* Worker summary tile */
-function SummaryTile({
-  icon: Icon,
-  count,
-  label,
-  className,
-}: {
-  icon: typeof CalendarCheck;
-  count: number;
-  label: string;
-  className: string;
-}) {
-  return (
-    <div
-      className={`flex h-[97px] flex-col items-center justify-center rounded-[14px] border ${className}`}
-    >
-      <Icon className="size-7" strokeWidth={1.75} aria-hidden />
-
-      <span className="mt-1 text-2xl font-extrabold leading-none text-slate-900">
-        {count}
-      </span>
-
-      <span className="mt-1 text-xs font-semibold uppercase leading-none text-slate-900">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-/* DYNAMIC: Summary counts use the workers array */
-function WorkerSummary({ workers }: { workers: Worker[] }) {
-  const count = (status: WorkerStatus) =>
-    workers.filter((worker) => worker.status === status).length;
-
-  return (
-    <section className={`p-6 ${card}`}>
-      <h2 className={`text-center text-base font-bold uppercase ${navy}`}>
-        Worker Summary
-      </h2>
-
-      <div className="mt-4 grid grid-cols-2 gap-5">
-        <SummaryTile
-          icon={CircleCheck}
-          count={count("Active")}
-          label="Active"
-          className="border-green-600 bg-[#E2F1E6] text-green-600"
-        />
-
-        <SummaryTile
-          icon={UserX}
-          count={count("Inactive")}
-          label="Inactive"
-          className="border-slate-400 bg-slate-100 text-slate-500"
-        />
       </div>
     </section>
   );
 }
 
-/* Recent worker activity */
-function RecentActivity({
-  items,
+// ==========================================
+// WORKER SUMMARY
+// ==========================================
+
+function WorkerSummary({
+  active,
+  inactive,
 }: {
-  items: Activity[];
+  active: number;
+  inactive: number;
 }) {
+  const summary: SummaryItem[] = [
+    { ...WORKER_SUMMARY[0], value: String(active) },
+    { ...WORKER_SUMMARY[1], value: String(inactive) },
+    { ...WORKER_SUMMARY[2], value: "0" },
+    { ...WORKER_SUMMARY[3], value: "0" },
+  ];
+
   return (
-    <section className={`flex-1 p-6 ${card}`}>
-      <div className="flex items-center justify-between">
-        <h2 className={`text-base font-bold uppercase ${navy}`}>
+    <section className="rounded-xl border border-border bg-white p-4 shadow-[0_2px_6px_rgba(0,0,0,0.12)] sm:p-5">
+      <h3 className="mb-4 text-left text-[15px] font-bold text-[hsl(var(--dark-blue))] sm:text-[16px] lg:text-center lg:text-sm lg:tracking-wide">
+        WORKER SUMMARY
+      </h3>
+
+      {/* MOBILE AND TABLET VIEW */}
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:hidden">
+        {summary.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <div
+              key={item.label}
+              className={`flex aspect-square min-w-0 flex-col items-center justify-center rounded-[22px] border-[0.75px] px-1 py-2 ${item.box}`}
+            >
+              <Icon
+                className={`h-6 w-6 shrink-0 sm:h-8 sm:w-8 ${item.iconColor}`}
+                strokeWidth={2.2}
+              />
+
+              <p className="mt-1 text-lg font-extrabold leading-none text-[hsl(var(--dark-blue))] sm:text-2xl">
+                {item.value}
+              </p>
+
+              <p className="mt-1 text-center text-[8px] font-extrabold leading-tight text-[hsl(var(--dark-blue))] sm:text-[11px]">
+                {item.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* DESKTOP VIEW */}
+      <div className="hidden grid-cols-2 gap-4 lg:grid">
+        {summary.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <div
+              key={item.label}
+              className={`flex h-[88px] min-w-0 flex-col items-center justify-center rounded-xl border ${item.box}`}
+            >
+              <Icon
+                className={`mb-1 h-7 w-7 shrink-0 ${item.iconColor}`}
+                strokeWidth={2.2}
+              />
+
+              <span className="text-xl font-bold leading-none text-[hsl(var(--dark-blue))]">
+                {item.value}
+              </span>
+
+              <span className="mt-1 text-center text-[10px] font-bold text-[hsl(var(--dark-blue))]">
+                {item.webLabel}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
+// RECENT ACTIVITY
+// ==========================================
+
+function RecentActivity({ items }: { items: Activity[] }) {
+  return (
+    <section className={`p-4 sm:p-5 ${card}`}>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h2 className={`text-[15px] font-bold uppercase sm:text-base ${navy}`}>
           Recent Activity
         </h2>
 
         <Link
           href="/owner/notifications"
-          className="text-xs font-semibold text-blue-700 underline"
+          className="shrink-0 text-[11px] font-semibold text-blue-700 underline sm:text-xs"
         >
           View All
         </Link>
       </div>
 
-      <ul className="mt-5 flex flex-col gap-4">
+      <ul className="flex flex-col gap-4 sm:gap-5">
         {items.map((activity) => {
           const isGreen = activity.tone === "green";
           const Icon = isGreen ? Calendar : User;
 
           return (
-            <li
-              key={activity.id}
-              className="flex items-center gap-3.5"
-            >
+            <li key={activity.id} className="flex min-w-0 items-start gap-3">
               <div
-                className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
+                className={`flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10 ${
                   isGreen
                     ? "bg-[#E2F3E6] text-green-600"
                     : "bg-orange-50 text-orange-400"
                 }`}
               >
                 <Icon
-                  className="size-6"
+                  className="size-5 sm:size-6"
                   strokeWidth={1.75}
                   aria-hidden
                 />
               </div>
 
-              <div className="min-w-0">
+              <div className="min-w-0 leading-tight">
                 <p
-                  className={`truncate text-sm font-bold uppercase leading-tight ${
+                  className={`truncate text-[11px] font-bold uppercase ${
                     isGreen ? "text-green-600" : navy
                   }`}
                 >
                   {activity.title}
                 </p>
 
-                <p className="text-[13px] font-semibold leading-tight text-slate-900">
+                <p className="text-[10px] font-semibold text-slate-900">
                   {activity.description}
                 </p>
 
-                <p className="text-[11px] leading-tight text-slate-400">
+                <p className="mt-1 text-[9px] text-neutral-400">
                   {activity.time}
                 </p>
               </div>
@@ -252,7 +362,10 @@ function RecentActivity({
   );
 }
 
-/* Default form values */
+// ==========================================
+// PERSONAL INFORMATION FORM TYPES
+// ==========================================
+
 const EMPTY_FORM = {
   fullName: "",
   phone: "",
@@ -264,7 +377,10 @@ const EMPTY_FORM = {
 
 type FormState = typeof EMPTY_FORM;
 
-/* Reusable field label */
+// ==========================================
+// FORM FIELD
+// ==========================================
+
 function Field({
   label,
   htmlFor,
@@ -275,10 +391,10 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className={`text-base font-bold uppercase ${navy}`}
+        className={`text-sm font-bold uppercase sm:text-base ${navy}`}
       >
         {label}
       </label>
@@ -288,7 +404,10 @@ function Field({
   );
 }
 
-/* Reusable styled dropdown */
+// ==========================================
+// STYLED SELECT
+// ==========================================
+
 function StyledSelect({
   value,
   onChange,
@@ -315,7 +434,7 @@ function StyledSelect({
           compact
             ? "h-9 min-w-0 gap-1 rounded-lg px-2 text-xs font-semibold"
             : "h-10 w-full rounded-xl px-4 text-sm"
-        } flex items-center justify-between bg-[#E6EEFC] text-slate-900 outline-none transition-colors hover:bg-[#DCE7FA] focus-visible:ring-2 focus-visible:ring-blue-700`}
+        } flex min-w-0 items-center justify-between bg-[#E6EEFC] text-slate-900 outline-none transition-colors hover:bg-[#DCE7FA] focus-visible:ring-2 focus-visible:ring-blue-700`}
       >
         <Select.Value placeholder={placeholder} />
 
@@ -326,17 +445,14 @@ function StyledSelect({
 
       <Select.Portal>
         <Select.Content
-          data-calendar-dropdown="true"
           position="popper"
           sideOffset={5}
           collisionPadding={8}
           className="z-[100] max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
-          style={{
-            minWidth: "var(--radix-select-trigger-width)",
-          }}
+          style={{ minWidth: "var(--radix-select-trigger-width)" }}
         >
           <Select.ScrollUpButton className="flex h-6 items-center justify-center text-slate-500">
-            <ChevronDown className="size-4 rotate-180" />
+            ⌃
           </Select.ScrollUpButton>
 
           <Select.Viewport className="max-h-60">
@@ -346,9 +462,7 @@ function StyledSelect({
                 value={option.value}
                 className="relative flex cursor-pointer select-none items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none data-[highlighted]:bg-[#E6EEFC] data-[state=checked]:bg-[#E6EEFC]"
               >
-                <Select.ItemText>
-                  {option.label}
-                </Select.ItemText>
+                <Select.ItemText>{option.label}</Select.ItemText>
 
                 <Select.ItemIndicator>
                   <Check className="size-4 text-blue-600" />
@@ -358,7 +472,7 @@ function StyledSelect({
           </Select.Viewport>
 
           <Select.ScrollDownButton className="flex h-6 items-center justify-center text-slate-500">
-            <ChevronDown className="size-4" />
+            ⌄
           </Select.ScrollDownButton>
         </Select.Content>
       </Select.Portal>
@@ -366,13 +480,22 @@ function StyledSelect({
   );
 }
 
-/* Calendar month options */
+// ==========================================
+// DATE OF BIRTH PICKER
+// ==========================================
+
 const MONTHS = Array.from({ length: 12 }, (_, month) => ({
   value: String(month),
   label: format(new Date(2020, month, 1), "MMMM"),
 }));
 
-/* Date of Birth calendar */
+const CURRENT_YEAR = new Date().getFullYear();
+
+const YEARS = Array.from({ length: CURRENT_YEAR - 1899 }, (_, index) => ({
+  value: String(CURRENT_YEAR - index),
+  label: String(CURRENT_YEAR - index),
+}));
+
 function DatePicker({
   value,
   onChange,
@@ -384,167 +507,87 @@ function DatePicker({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const parsed = value ? parseISO(value) : undefined;
-  const selected =
-    parsed && isValid(parsed) ? parsed : undefined;
+  const selected = parsed && isValid(parsed) ? parsed : undefined;
 
-  // Fixed initial date avoids reading the current time during render.
-  const [month, setMonth] = useState<Date>(
-    () => selected ?? new Date(2000, 0, 1)
-  );
+  const [month, setMonth] = useState<Date>(() => selected ?? new Date());
 
-  // Current date is initialized after mounting.
-  const [today, setToday] = useState<Date | null>(null);
-
+  const today = new Date();
   const earliest = new Date(1900, 0, 1);
-
-  /* DYNAMIC: Initialize today's date on the client */
-  useEffect(() => {
-    const currentDate = new Date();
-
-    setToday(currentDate);
-    setMonth(selected ?? currentDate);
-    // Run once after mounting.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /* DYNAMIC: Generate years through the current year */
-  const currentYear = today?.getFullYear() ?? 2000;
-
-  const years = Array.from(
-    { length: currentYear - 1899 },
-    (_, index) => ({
-      value: String(currentYear - index),
-      label: String(currentYear - index),
-    })
-  );
 
   const canPrevious =
     month.getFullYear() > 1900 || month.getMonth() > 0;
 
   const canNext =
-    today !== null &&
-    (month.getFullYear() < today.getFullYear() ||
-      (month.getFullYear() === today.getFullYear() &&
-        month.getMonth() < today.getMonth()));
+    month.getFullYear() < today.getFullYear() ||
+    (month.getFullYear() === today.getFullYear() &&
+      month.getMonth() < today.getMonth());
 
-  /* Close calendar when clicking outside */
   useEffect(() => {
     if (!open) return;
 
     const handleOutside = (event: PointerEvent) => {
-      const target = event.target;
-
-      if (!(target instanceof Element)) return;
-
-      // Ignore clicks inside the calendar.
-      if (containerRef.current?.contains(target)) {
-        return;
-      }
-
-      // Ignore clicks inside Radix dropdown portals.
       if (
-        target.closest(
-          '[data-calendar-dropdown="true"], [role="option"], [role="listbox"]'
-        )
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
       ) {
-        return;
+        setOpen(false);
       }
-
-      setOpen(false);
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
+      if (event.key === "Escape") setOpen(false);
     };
 
     document.addEventListener("pointerdown", handleOutside);
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener(
-        "pointerdown",
-        handleOutside
-      );
-      document.removeEventListener(
-        "keydown",
-        handleEscape
-      );
+      document.removeEventListener("pointerdown", handleOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
 
-  /* Change displayed month or year */
   function changeMonth(year: number, monthIndex: number) {
-    if (!today) return;
-
     const next = new Date(year, monthIndex, 1);
 
-    const latest = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    );
-
-    if (next >= earliest && next <= latest) {
+    if (next >= earliest && next <= today) {
       setMonth(next);
     }
   }
 
   return (
-    <div ref={containerRef} className="relative w-full">
-      {/* Date input */}
+    <div ref={containerRef} className="relative w-full min-w-0">
       <button
         id="worker-dob"
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
-          if (!open) {
-            setMonth(
-              selected ?? today ?? new Date(2000, 0, 1)
-            );
-          }
-
+          if (!open) setMonth(selected ?? new Date());
           setOpen(!open);
         }}
         className={`${inputClass} flex items-center justify-between text-left`}
       >
-        <span
-          className={
-            selected ? "text-slate-900" : "text-slate-500"
-          }
-        >
-          {selected
-            ? format(selected, "dd/MM/yyyy")
-            : "dd/mm/yyyy"}
+        <span className={selected ? "text-slate-900" : "text-slate-500"}>
+          {selected ? format(selected, "dd/MM/yyyy") : "dd/mm/yyyy"}
         </span>
 
-        <CalendarDays
-          className="size-4 shrink-0 text-slate-700"
-          aria-hidden
-        />
+        <CalendarDays className="size-4 shrink-0 text-slate-700" aria-hidden />
       </button>
 
-      {/* Calendar popup */}
       {open && (
         <div
           role="dialog"
           aria-label="Choose date of birth"
           className="absolute left-0 top-full z-50 mt-2 w-full min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
         >
-          {/* Month and year navigation */}
           <div className="mb-3 flex items-center justify-between gap-1">
-            {/* Previous month */}
             <button
               type="button"
               aria-label="Previous month"
               disabled={!canPrevious}
               onClick={() =>
-                changeMonth(
-                  month.getFullYear(),
-                  month.getMonth() - 1
-                )
+                changeMonth(month.getFullYear(), month.getMonth() - 1)
               }
               className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-700 hover:bg-[#E6EEFC] disabled:opacity-30"
             >
@@ -552,51 +595,41 @@ function DatePicker({
             </button>
 
             <div className="flex min-w-0 items-center justify-center gap-1.5">
-              {/* Month dropdown */}
               <StyledSelect
                 compact
                 ariaLabel="Calendar month"
                 value={String(month.getMonth())}
-                onChange={(value) =>
-                  changeMonth(
-                    month.getFullYear(),
-                    Number(value)
-                  )
+                onChange={(v) =>
+                  changeMonth(month.getFullYear(), Number(v))
                 }
                 options={MONTHS}
               />
 
-              {/* Year dropdown */}
               <StyledSelect
                 compact
                 ariaLabel="Calendar year"
                 value={String(month.getFullYear())}
-                onChange={(value) =>
+                onChange={(v) =>
                   changeMonth(
-                    Number(value),
+                    Number(v),
                     Math.min(
                       month.getMonth(),
-                      today &&
-                        Number(value) === today.getFullYear()
+                      Number(v) === today.getFullYear()
                         ? today.getMonth()
                         : 11
                     )
                   )
                 }
-                options={years}
+                options={YEARS}
               />
             </div>
 
-            {/* Next month */}
             <button
               type="button"
               aria-label="Next month"
               disabled={!canNext}
               onClick={() =>
-                changeMonth(
-                  month.getFullYear(),
-                  month.getMonth() + 1
-                )
+                changeMonth(month.getFullYear(), month.getMonth() + 1)
               }
               className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-700 hover:bg-[#E6EEFC] disabled:opacity-30"
             >
@@ -604,22 +637,18 @@ function DatePicker({
             </button>
           </div>
 
-          {/* Calendar days */}
           <DayPicker
             mode="single"
             month={month}
             onMonthChange={setMonth}
             selected={selected}
             onSelect={(date) => {
-              if (!date) return;
-
-              onChange(format(date, "yyyy-MM-dd"));
-              setOpen(false);
+              if (date) {
+                onChange(format(date, "yyyy-MM-dd"));
+                setOpen(false);
+              }
             }}
-            disabled={{
-              before: earliest,
-              after: today ?? undefined,
-            }}
+            disabled={{ before: earliest, after: today }}
             hideNavigation
             showOutsideDays={false}
             classNames={{
@@ -627,8 +656,7 @@ function DatePicker({
               months: "w-full",
               month: "w-full",
               month_caption: "hidden",
-              month_grid:
-                "w-full table-fixed border-collapse",
+              month_grid: "w-full table-fixed border-collapse",
               weekdays: "",
               weekday:
                 "pb-2 text-center text-[11px] font-medium text-slate-500",
@@ -649,7 +677,10 @@ function DatePicker({
   );
 }
 
-/* Personal information form */
+// ==========================================
+// PERSONAL INFORMATION FORM
+// ==========================================
+
 function PersonalInformationForm({
   onAdd,
 }: {
@@ -659,19 +690,14 @@ function PersonalInformationForm({
 
   const set =
     (key: keyof FormState) =>
-    (
-      event: React.ChangeEvent<
-        HTMLInputElement | HTMLTextAreaElement
-      >
-    ) => {
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm((previous) => ({
         ...previous,
         [key]: event.target.value,
       }));
     };
 
-  /* TODO: Submit form data to database */
-  const submit = (event: SubmitEvent<HTMLFormElement>) => {
+  const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!form.fullName.trim()) return;
@@ -681,20 +707,13 @@ function PersonalInformationForm({
   };
 
   return (
-    <form
-      onSubmit={submit}
-      className={`flex flex-1 flex-col p-6 ${card}`}
-    >
-      <h2
-        className={`px-1 pt-1 text-xl font-bold uppercase ${navy}`}
-      >
+    <form onSubmit={submit} className={`flex flex-col p-4 sm:p-6 ${card}`}>
+      <h2 className={`px-1 pt-1 text-lg font-bold uppercase sm:text-xl ${navy}`}>
         Personal Information
       </h2>
 
-      <div className="mt-6 grid grid-cols-1 gap-x-11 gap-y-6 px-1 sm:grid-cols-2">
-        {/* Left column */}
-        <div className="flex flex-col gap-6">
-          {/* Full Name */}
+      <div className="mt-5 grid min-w-0 grid-cols-1 gap-x-8 gap-y-5 px-1 sm:mt-6 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-6 lg:gap-x-11">
+        <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
           <Field label="Full Name" htmlFor="worker-name">
             <input
               id="worker-name"
@@ -705,30 +724,22 @@ function PersonalInformationForm({
             />
           </Field>
 
-          {/* Date of Birth */}
           <Field label="Date of Birth" htmlFor="worker-dob">
             <DatePicker
               value={form.dob}
               onChange={(dob) =>
-                setForm((previous) => ({
-                  ...previous,
-                  dob,
-                }))
+                setForm((previous) => ({ ...previous, dob }))
               }
             />
           </Field>
 
-          {/* Gender */}
           <Field label="Gender" htmlFor="worker-gender">
             <StyledSelect
               id="worker-gender"
               ariaLabel="Gender"
               value={form.gender}
               onChange={(gender) =>
-                setForm((previous) => ({
-                  ...previous,
-                  gender,
-                }))
+                setForm((previous) => ({ ...previous, gender }))
               }
               placeholder="Select gender"
               options={[
@@ -740,9 +751,7 @@ function PersonalInformationForm({
           </Field>
         </div>
 
-        {/* Right column */}
-        <div className="flex flex-col gap-6">
-          {/* Phone Number */}
+        <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
           <Field label="Phone Number" htmlFor="worker-phone">
             <input
               id="worker-phone"
@@ -753,7 +762,6 @@ function PersonalInformationForm({
             />
           </Field>
 
-          {/* Email Address */}
           <Field label="Email Address" htmlFor="worker-email">
             <input
               id="worker-email"
@@ -764,7 +772,6 @@ function PersonalInformationForm({
             />
           </Field>
 
-          {/* Address */}
           <Field label="Address" htmlFor="worker-address">
             <textarea
               id="worker-address"
@@ -776,11 +783,10 @@ function PersonalInformationForm({
         </div>
       </div>
 
-      {/* Add Worker button */}
-      <div className="mt-auto flex justify-end px-1 pt-7">
+      <div className="mt-6 flex justify-end px-1 sm:mt-auto sm:pt-7">
         <button
           type="submit"
-          className="h-10 rounded-lg border-2 border-blue-700 bg-white px-6 text-base font-bold uppercase text-blue-700 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+          className="h-10 w-full rounded-lg border-2 border-blue-700 bg-white px-6 text-sm font-bold uppercase text-blue-700 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:w-auto sm:text-base"
         >
           Add Worker
         </button>
@@ -789,7 +795,10 @@ function PersonalInformationForm({
   );
 }
 
-/* Workers table */
+// ==========================================
+// WORKERS TABLE + MOBILE CARD VIEW
+// ==========================================
+
 export function WorkersTable({
   workers,
   onDelete,
@@ -810,54 +819,131 @@ export function WorkersTable({
       : "border border-red-500 bg-red-50 text-red-500 hover:bg-red-100";
 
   return (
-    <section className={`overflow-hidden ${card}`}>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[44rem] table-fixed">
+    <section className={`min-w-0 overflow-hidden ${card}`}>
+      <div className="flex items-center justify-between gap-2 px-4 py-4 sm:px-6">
+        <h2 className={`text-base font-bold uppercase sm:text-lg ${navy}`}>
+          Workers List
+        </h2>
+
+        <span className="text-xs font-semibold text-slate-500">
+          {workers.length} {workers.length === 1 ? "Worker" : "Workers"}
+        </span>
+      </div>
+
+      {/* MOBILE CARD VIEW */}
+      <div className="flex flex-col gap-3 px-4 pb-4 md:hidden">
+        {workers.length === 0 && (
+          <p className="rounded-lg bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            No workers yet.
+          </p>
+        )}
+
+        {workers.map((worker, index) => (
+          <article
+            key={worker.id}
+            className="min-w-0 rounded-xl border border-slate-200 bg-white p-3"
+          >
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <User className="size-5" strokeWidth={1.75} aria-hidden />
+                </span>
+
+                <div className="min-w-0">
+                  <p className={`truncate text-sm font-bold ${navy}`}>
+                    {worker.name}
+                  </p>
+
+                  <p className="mt-0.5 text-[11px] text-slate-500">
+                    Worker #{index + 1}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                className={`shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-bold ${
+                  worker.status === "Active"
+                    ? "bg-[#E2F3E6] text-green-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {worker.status}
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3">
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase text-slate-400">
+                  Contact
+                </p>
+
+                <p className="mt-1 truncate text-xs font-semibold text-slate-800">
+                  {worker.contact || "—"}
+                </p>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase text-slate-400">
+                  Availability
+                </p>
+
+                <span
+                  className={`mt-1 inline-block max-w-full truncate rounded-lg px-2.5 py-1 text-[10px] font-bold ${AVAILABILITY_STYLES[worker.availability]}`}
+                >
+                  {worker.availability}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-3 flex justify-end gap-2 border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                aria-label={`Edit ${worker.name}`}
+                className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${editClass}`}
+              >
+                <SquarePen className="size-4" strokeWidth={1.75} aria-hidden />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onDelete(worker.id)}
+                aria-label={`Delete ${worker.name}`}
+                className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${deleteClass}`}
+              >
+                <Trash2 className="size-4" strokeWidth={1.75} aria-hidden />
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* TABLE VIEW FOR TABLET AND DESKTOP */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[700px] table-fixed">
           <colgroup>
-            <col className="w-[9%]" />
-            <col className="w-[21%]" />
+            <col className="w-[7%]" />
+            <col className="w-[23%]" />
             <col className="w-[19%]" />
             <col className="w-[18%]" />
-            <col className="w-[18%]" />
-            <col className="w-[15%]" />
+            <col className="w-[17%]" />
+            <col className="w-[16%]" />
           </colgroup>
 
-          <thead
-            className={`bg-[#E6EEFC] text-base uppercase ${navy}`}
-          >
-            <tr className="h-20 border-b-[3px] border-slate-300/70">
-              <th scope="col" className="font-bold">
-                #
-              </th>
-
-              <th
-                scope="col"
-                className="pl-12 text-left font-bold"
-              >
-                Worker Name
-              </th>
-
-              <th scope="col" className="font-bold">
-                Contact
-              </th>
-
-              <th scope="col" className="font-bold">
-                Status
-              </th>
-
-              <th scope="col" className="font-bold">
-                Action
-              </th>
+          <thead className={`bg-[#E6EEFC] text-sm uppercase sm:text-base ${navy}`}>
+            <tr className="h-16 border-b-[3px] border-slate-300/70">
+              <th scope="col" className="font-bold">#</th>
+              <th scope="col" className="pl-6 text-left font-bold">Worker Name</th>
+              <th scope="col" className="font-bold">Contact</th>
+              <th scope="col" className="font-bold">Availability</th>
+              <th scope="col" className="font-bold">Status</th>
+              <th scope="col" className="font-bold">Action</th>
             </tr>
           </thead>
 
           <tbody>
             {workers.length === 0 && (
               <tr>
-                <td
-                  colSpan={5}
-                  className="h-24 text-center text-sm text-slate-500"
-                >
+                <td colSpan={6} className="h-24 text-center text-sm text-slate-500">
                   No workers yet.
                 </td>
               </tr>
@@ -866,21 +952,14 @@ export function WorkersTable({
             {workers.map((worker, index) => (
               <tr
                 key={worker.id}
-                className="h-24 text-center uppercase text-slate-900"
+                className="h-20 text-center uppercase text-slate-900"
               >
-                <td className="text-xs font-bold">
-                  {index + 1}
-                </td>
+                <td className="text-xs font-bold">{index + 1}</td>
 
-                {/* Worker name */}
-                <td className="pl-12 text-left">
-                  <div className="flex items-center gap-3.5">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                      <User
-                        className="size-5"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
+                <td className="pl-6 text-left">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                      <User className="size-5" strokeWidth={1.75} aria-hidden />
                     </span>
 
                     <span className="truncate text-xs font-bold">
@@ -889,15 +968,21 @@ export function WorkersTable({
                   </div>
                 </td>
 
-                {/* Contact number */}
-                <td className="text-[13px] font-bold">
+                <td className="truncate px-2 text-xs font-bold">
                   {worker.contact}
                 </td>
 
-                {/* Worker status */}
                 <td>
                   <span
-                    className={`inline-block w-24 rounded-lg py-1.5 text-[13px] font-bold ${
+                    className={`inline-block max-w-[90%] rounded-lg px-2 py-1.5 text-xs font-bold ${AVAILABILITY_STYLES[worker.availability]}`}
+                  >
+                    {worker.availability}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    className={`inline-block rounded-lg px-3 py-1.5 text-xs font-bold ${
                       worker.status === "Active"
                         ? "bg-[#E2F3E6] text-green-700"
                         : "bg-slate-100 text-slate-500"
@@ -907,34 +992,23 @@ export function WorkersTable({
                   </span>
                 </td>
 
-                {/* Worker actions */}
                 <td>
-                  <div className="flex items-center justify-center gap-3">
-                    {/* TODO: Connect Edit to database update */}
+                  <div className="flex items-center justify-center gap-2">
                     <button
                       type="button"
                       aria-label={`Edit ${worker.name}`}
-                      className={`flex size-[38px] items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${editClass}`}
+                      className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${editClass}`}
                     >
-                      <SquarePen
-                        className="size-5"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
+                      <SquarePen className="size-4" strokeWidth={1.75} aria-hidden />
                     </button>
 
-                    {/* TODO: Connect Delete to database */}
                     <button
                       type="button"
                       onClick={() => onDelete(worker.id)}
                       aria-label={`Delete ${worker.name}`}
-                      className={`flex size-[38px] items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${deleteClass}`}
+                      className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${deleteClass}`}
                     >
-                      <Trash2
-                        className="size-5"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
+                      <Trash2 className="size-4" strokeWidth={1.75} aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -947,12 +1021,60 @@ export function WorkersTable({
   );
 }
 
-/* Owner Workers page */
-export default function WorkersClient() {
-  /* TODO: Load workers from database instead of mock data */
-  const [workers, setWorkers] = useState(INITIAL_WORKERS);
+// ==========================================
+// OWNER'S WORKERS PAGE
+// ==========================================
 
-  /* TODO: Save all worker fields to database */
+export default function OwnerWorkersPage() {
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [loadingWorkers, setLoadingWorkers] = useState(true);
+
+  // Load workers using the same Supabase RPC as the Owner Dashboard.
+  useEffect(() => {
+    let alive = true;
+
+    async function loadWorkers() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("list_workers");
+
+        if (error) throw error;
+
+        const rows = (data ?? []) as WorkerRow[];
+
+        const mappedWorkers: Worker[] = rows.map((worker) => {
+          const name =
+            `${worker.first_name ?? ""} ${worker.last_name ?? ""}`.trim();
+
+          return {
+            id: worker.id,
+            name: name || "Unnamed Worker",
+            contact: "",
+            availability: "Available",
+            status:
+              worker.account_status === "active" ? "Active" : "Inactive",
+          };
+        });
+
+        if (alive) {
+          setWorkers(mappedWorkers);
+        }
+      } catch (error) {
+        console.error("Failed to load workers:", error);
+      } finally {
+        if (alive) {
+          setLoadingWorkers(false);
+        }
+      }
+    }
+
+    void loadWorkers();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const addWorker = (form: FormState) => {
     setWorkers((previous) => [
       ...previous,
@@ -960,32 +1082,67 @@ export default function WorkersClient() {
         id: crypto.randomUUID(),
         name: form.fullName.trim(),
         contact: form.phone,
+        availability: "Available",
         status: "Active",
       },
     ]);
   };
 
-  /* TODO: Delete worker from database */
   const deleteWorker = (id: string) => {
     setWorkers((previous) =>
       previous.filter((worker) => worker.id !== id)
     );
   };
 
+  const activeWorkers = workers.filter(
+    (worker) => worker.status === "Active"
+  ).length;
+
+  const inactiveWorkers = workers.filter(
+    (worker) => worker.status === "Inactive"
+  ).length;
+
   return (
-    <div className="flex flex-col gap-12">
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_17.75rem]">
-        <div className="flex flex-col gap-12">
+    <div className="flex min-w-0 flex-col gap-6 sm:gap-8 lg:gap-10">
+      <div className="grid min-w-0 grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_17.75rem] lg:gap-6">
+        {/* LEFT COLUMN */}
+        <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
           <Banner image={bannerImage} />
+
+          {/* MOBILE WORKER SUMMARY */}
+          <div className="lg:hidden">
+            <WorkerSummary
+              active={activeWorkers}
+              inactive={inactiveWorkers}
+            />
+          </div>
+
+          {loadingWorkers && (
+            <p className="text-center text-xs text-slate-500">
+              Loading workers...
+            </p>
+          )}
+
           <PersonalInformationForm onAdd={addWorker} />
+
+          {/* MOBILE RECENT ACTIVITY */}
+          <div className="lg:hidden">
+            <RecentActivity items={ACTIVITIES} />
+          </div>
         </div>
 
-        <aside className="flex flex-col gap-10">
-          <WorkerSummary workers={workers} />
+        {/* RIGHT COLUMN - DESKTOP */}
+        <aside className="hidden min-w-0 flex-col gap-6 lg:flex">
+          <WorkerSummary
+            active={activeWorkers}
+            inactive={inactiveWorkers}
+          />
+
           <RecentActivity items={ACTIVITIES} />
         </aside>
       </div>
 
+      {/* WORKERS LIST */}
       <WorkersTable
         workers={workers}
         onDelete={deleteWorker}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -16,7 +17,6 @@ import {toLocalKey, toLocalTime} from "@/lib/shifts/format";
 /* Shift types */
 type ShiftColor = "green" | "blue" | "orange";
 
-/* TODO: Database shift record (date: yyyy-mm-dd, start/end: HH:mm in 24-hour time) */
 interface ShiftRow {
 	id: string;
 	date: string;
@@ -30,7 +30,6 @@ interface ShiftRow {
 	startsAt: string;
 }
 
-/* Calendar cell data, one shift per day (keyed by yyyy-mm-dd) */
 interface CalendarShift {
 	time: string;
 	label: string;
@@ -38,10 +37,13 @@ interface CalendarShift {
 	extraCount?: number;
 }
 
-/* TODO: Load shift names from database */
-const TASKS = ["Coating", "Packaging", "Mixing", "Ice Cream Production"];
+const TASKS = [
+  "Coating",
+  "Packaging",
+  "Mixing",
+  "Ice Cream Production",
+];
 
-/* Required workers dropdown options (change the range here) */
 const WORKER_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({
 	value: String(n),
 	label: String(n),
@@ -71,7 +73,6 @@ const SHIFT_STYLES: Record<
 	},
 };
 
-/* TODO: Add colors for new shift names (keys are lowercase, unlisted names default to blue) */
 const COLOR_BY_TASK: Record<string, ShiftColor> = {
 	coating: "green",
 	packaging: "blue",
@@ -79,6 +80,7 @@ const COLOR_BY_TASK: Record<string, ShiftColor> = {
 };
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THURS", "FRI", "SAT"];
+
 const MONTHS = [
 	"JANUARY",
 	"FEBRUARY",
@@ -96,17 +98,16 @@ const MONTHS = [
 
 /* Helpers */
 const pad = (n: number) => n.toString().padStart(2, "0");
+
 const toKey = (y: number, m: number, d: number) =>
 	`${y}-${pad(m + 1)}-${pad(d)}`;
 
-/* Expects HH:mm (24-hour), returns 6:00 AM (or 6:00 am when lower is true) */
 function fmtTime(t: string, lower = false) {
 	const [h, m] = t.split(":").map(Number);
 	const s = `${h % 12 || 12}:${pad(m)} ${h >= 12 ? "PM" : "AM"}`;
 	return lower ? s.toLowerCase() : s;
 }
 
-/* Expects yyyy-mm-dd */
 function parseKey(key: string) {
 	const [y, m, d] = key.split("-").map(Number);
 	return new Date(y, m - 1, d);
@@ -161,7 +162,7 @@ function buildMonthGrid(year: number, month: number): Cell[] {
 	return cells;
 }
 
-/* Time input helpers (typed time is h:mm plus AM or PM, stored as HH:mm in 24-hour time) */
+/* Time input helpers */
 type Period = "AM" | "PM";
 
 /* Convert HH:mm (24-hour) to typed text and AM or PM */
@@ -170,12 +171,10 @@ function to12h(t: string): {text: string; period: Period} {
 	return {text: `${h % 12 || 12}:${pad(m)}`, period: h >= 12 ? "PM" : "AM"};
 }
 
-/* Convert h, m and AM or PM to HH:mm (24-hour) */
 function to24h(h: number, m: number, period: Period) {
 	return `${pad((h % 12) + (period === "PM" ? 12 : 0))}:${pad(m)}`;
 }
 
-/* Auto-format typing: 630 becomes 6:30, 1230 becomes 12:30 */
 function formatTypedTime(raw: string) {
 	if (raw.includes(":")) {
 		const [hour, minute = ""] = raw.split(":");
@@ -212,6 +211,7 @@ function parseTime(text: string): {h: number; m: number} | null {
 const card =
 	"rounded-xl border border-[#D9D9D9] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)]";
 const navy = "text-[hsl(var(--dark-blue))]";
+
 const inputClass =
 	"h-8 w-full rounded-lg bg-[#E6EEFC] px-3 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-blue-700";
 const popoverClass =
@@ -237,7 +237,10 @@ function Banner({image}: {image: StaticImageData}) {
 	);
 }
 
-/* Close a popup when clicking outside or pressing Escape */
+/* ==========================================
+   DISMISS POPUP
+========================================== */
+
 function useDismiss(
 	ref: React.RefObject<HTMLElement | null>,
 	open: boolean,
@@ -260,7 +263,10 @@ function useDismiss(
 	}, [open, ref, close]);
 }
 
-/* Reusable styled dropdown (options are { value, label } with string values) */
+/* ==========================================
+   DROPDOWN
+========================================== */
+
 function Dropdown({
 	label,
 	value,
@@ -324,7 +330,10 @@ function Dropdown({
 	);
 }
 
-/* Shift date calendar (value and onChange use yyyy-mm-dd) */
+/* ==========================================
+   DATE PICKER
+========================================== */
+
 function DatePicker({
 	label,
 	value,
@@ -445,7 +454,10 @@ function DatePicker({
 	);
 }
 
-/* Typed time input with AM/PM toggle (value and onChange use HH:mm in 24-hour time) */
+/* ==========================================
+   TIME INPUT
+========================================== */
+
 function TimeInput({
 	label,
 	value,
@@ -539,7 +551,10 @@ function TimeInput({
 	);
 }
 
-/* Default form values */
+/* ==========================================
+   FORM
+========================================== */
+
 const EMPTY_FORM = {
 	name: "",
 	date: "",
@@ -548,6 +563,7 @@ const EMPTY_FORM = {
 	required: "",
 	notes: "",
 };
+
 type FormState = typeof EMPTY_FORM;
 
 /* Reusable field label */
@@ -690,9 +706,9 @@ function AddShiftForm({onAdd}: {onAdd: (f: FormState) => Promise<void>}) {
 	);
 }
 
-const GRID = "grid grid-cols-[191fr_220fr_213fr_185fr_146fr_150fr] items-center";
+const GRID =
+  "grid grid-cols-[191fr_220fr_213fr_185fr_146fr] items-center";
 
-/* Shifts table (used for Upcoming Shifts and All Shifts, only needs ShiftRow[]) */
 function ShiftsTable({
 	id,
 	title,

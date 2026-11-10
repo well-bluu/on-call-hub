@@ -1,3 +1,4 @@
+
 "use client";
 
 import bannerImage from "@/components/assets/images/help-support-banner.png";
@@ -14,7 +15,58 @@ import {
   Book,
 } from "lucide-react";
 
-// FAQS Layout
+// ==========================================
+// BANNER
+// ==========================================
+
+
+function Banner({ image }: { image: typeof bannerImage }) {
+  return (
+    <section
+      className="relative flex min-h-[145px] items-center overflow-hidden rounded-2xl border border-[#D9D9D9] px-5 py-5 shadow-sm sm:min-h-[165px] sm:px-8 lg:min-h-[175px]"
+      style={{
+        backgroundImage: `
+          linear-gradient(
+            90deg,
+            rgba(255,255,255,0.98) 0%,
+            rgba(255,255,255,0.95) 25%,
+            rgba(255,255,255,0.88) 40%,
+            rgba(255,255,255,0.70) 55%,
+            rgba(255,255,255,0.40) 70%,
+            rgba(255,255,255,0.12) 85%,
+            rgba(255,255,255,0) 100%
+          ),
+          url(${image.src})
+        `,
+        backgroundSize: "100% 100%, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
+      }}
+    >
+      <div className="relative z-10 max-w-[70%] sm:max-w-sm">
+       <h1 className="whitespace-nowrap text-2xl font-extrabold uppercase leading-tight text-[hsl(var(--dark-blue))] sm:text-3xl lg:text-4xl">
+          HELP &amp; SUPPORT
+      </h1>
+
+        <p className="mt-2 text-[11px] font-medium leading-relaxed text-[hsl(var(--dark-blue))] sm:text-sm">
+          Get assistance, report issues, and find answers{" "}
+          <span className="sm:hidden">
+            to common questions.
+          </span>
+          <span className="hidden sm:inline">
+            <br />
+            to common questions.
+          </span>
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
+// FAQS
+// ==========================================
+
 const FAQS = [
   {
     icon: PlusCircle,
@@ -58,78 +110,93 @@ const FAQS = [
   },
 ];
 
+// ==========================================
+// DOCUMENTATION RESOURCES
+// ==========================================
+
 const RESOURCES = [
   { icon: FileText, label: "Owner Manual", type: "PDF" },
   { icon: ShieldCheck, label: "Shift Management", type: "PDF" },
   { icon: Book, label: "Worker Management", type: "PDF" },
 ];
 
+// ==========================================
+// PAGE
+// ==========================================
+
 export default function OwnerHelpSupportPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="px-0.1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid w-full min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_260px] xl:gap-5">
       {/* LEFT SIDE */}
-      <div className="lg:col-span-2 flex flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-6">
 
-        {/* Hero banner */}
-        <div
-          className="relative overflow-hidden rounded-2xl border-[1px] border-[#D9D9D9] from-blue-50 to-blue-100 bg-cover bg-[position:40%_center] p-8"
-          style={{ backgroundImage: `url(${bannerImage.src})` }}
-        >
-          <div className="max-w-lg">
-            <h1 className="text-3xl font-extrabold tracking-tight text-[hsl(var(--dark-blue))]">
-              HELP &amp; SUPPORT
-            </h1>
-            <p className="mt-2 text-sm text-[hsl(var(--dark-blue))]">
-              Get assistance, report issues, and find answers <br /> to common questions.
-            </p>
-          </div>
-        </div>
+        {/* HERO BANNER */}
+        <Banner image={bannerImage} />
 
-        {/* FAQs Section */}
-        <div>
-          <h2 className="text-[18px] font-bold tracking-wide text-[hsl(var(--dark-blue))] mb-4">
+        {/* FREQUENTLY ASKED QUESTIONS */}
+        <section className="flex flex-col gap-5 xl:gap-4">
+          <h2 className="text-center text-sm font-bold tracking-wide text-[hsl(var(--dark-blue))] sm:text-lg xl:text-left xl:text-[18px]">
             FREQUENTLY ASKED QUESTIONS (FAQs)
           </h2>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 sm:gap-5 xl:gap-6">
             {FAQS.map((faq, i) => {
               const Icon = faq.icon;
               const isOpen = openIndex === i;
+
               return (
                 <div
                   key={faq.question}
-                  className={`rounded-xl border border-border bg-white overflow-hidden transition-shadow ${
+                  className={`overflow-hidden rounded-xl border border-border bg-white transition-shadow ${
                     isOpen
                       ? "shadow-[0_4px_12px_var(--faq-shadow)]"
-                      : "hover:shadow-[0_2px_6px_var(--faq-shadow)]"
+                      : "shadow-[0_2px_6px_rgba(0,0,0,0.12)]"
                   }`}
                   style={{ "--faq-shadow": faq.shadow } as React.CSSProperties}
                 >
+                  {/* FAQ QUESTION */}
                   <button
                     type="button"
-                    onClick={() => setOpenIndex(isOpen ? null : i)} // Open/close toggle for the FAQ accordion
-                    className="w-full flex items-center justify-between gap-3 p-4 text-left"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${i}`}
+                    onClick={() => setOpenIndex(isOpen ? null : i)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left sm:px-6 sm:py-6 xl:p-4"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-4 sm:gap-5 xl:gap-3">
+
+                      {/* FAQ ICON */}
                       <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${faq.iconBg}`}
+                        className={`flex size-11 shrink-0 items-center justify-center rounded-lg sm:size-14 xl:size-9 xl:rounded-md ${faq.iconBg}`}
                       >
-                        <Icon className="h-7 w-7" />
+                        <Icon
+                          className="size-6 sm:size-8 xl:size-5"
+                          aria-hidden="true"
+                        />
                       </span>
-                      <span className="font-semibold text-sm text-[hsl(var(--dark-blue))]">
+
+                      {/* FAQ TITLE */}
+                      <span className="text-[13px] font-semibold leading-snug text-[hsl(var(--dark-blue))] sm:text-lg xl:text-sm">
                         {faq.question.toUpperCase()}
                       </span>
                     </div>
+
+                    {/* EXPAND ICON */}
                     <ChevronDown
-                      className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${
+                      aria-hidden="true"
+                      className={`size-4 shrink-0 text-[hsl(var(--dark-blue))] transition-transform sm:size-5 ${
                         isOpen ? "rotate-180" : ""
                       }`}
                     />
                   </button>
+
+                  {/* FAQ ANSWER */}
                   {isOpen && (
-                    <div className="px-4 pb-5 pr-9 pl-8 text-sm leading-6 text-neutral-600 text-justify">
+                    <div
+                      id={`faq-answer-${i}`}
+                      className="px-4 pb-4 text-justify text-xs leading-relaxed text-neutral-600 sm:px-6 sm:pb-6 sm:text-sm xl:pb-5 xl:pl-8 xl:pr-9 xl:leading-6"
+                    >
                       {faq.answer}
                     </div>
                   )}
@@ -137,42 +204,53 @@ export default function OwnerHelpSupportPage() {
               );
             })}
           </div>
-        </div>
+        </section>
       </div>
-      {/* CLOSE LEFT SIDE */}
 
       {/* RIGHT SIDE */}
-      <div className="flex flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-6 xl:gap-4">
 
         {/* DOCUMENTATION RESOURCES */}
-        <div className="rounded-xl border border-border bg-white p-5">
-          <h3 className="text-[14px] font-bold tracking-wide text-[hsl(var(--dark-blue))] mb-4 text-center">
+        <section className="min-w-0 rounded-xl border border-border bg-white p-4 shadow-[0_2px_6px_rgba(0,0,0,0.12)] sm:p-6 xl:p-5 xl:shadow-none">
+          <h3 className="mb-5 text-sm font-bold tracking-wide text-[hsl(var(--dark-blue))] sm:text-lg xl:mb-4 xl:text-sm">
             DOCUMENTATION RESOURCES
           </h3>
-          <div className="flex flex-col gap-4">
+
+          <div className="flex flex-col gap-4 xl:gap-3">
             {RESOURCES.map((res) => {
               const Icon = res.icon;
+
               return (
                 <div
                   key={res.label}
-                  className="flex items-center gap-3 rounded-lg p-3 border border-border"
+                  className="flex items-center gap-4 rounded-xl border border-border px-4 py-4 sm:gap-5 sm:px-6 sm:py-6 xl:grid xl:grid-cols-[2rem_minmax(0,1fr)_auto] xl:grid-rows-[auto_auto] xl:items-center xl:gap-x-2 xl:gap-y-1 xl:rounded-lg xl:p-3"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md p-1 bg-[#E6EFFD] text-blue-600">
-                    <Icon className="h-5 w-5" />
+                  {/* RESOURCE ICON */}
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#E6EFFD] text-blue-600 sm:size-14 xl:col-start-1 xl:row-span-2 xl:row-start-1 xl:size-8 xl:rounded-md">
+                    <Icon
+                      className="size-6 sm:size-8 xl:size-5"
+                      aria-hidden="true"
+                    />
                   </span>
 
-                  {/* Text */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold whitespace-nowrap text-[hsl(var(--dark-blue))] leading-tight">
-                      {res.label.toUpperCase()}
-                      <br />({res.type})
+                  {/* RESOURCE NAME */}
+                  <div className="min-w-0 flex-1 xl:contents">
+                    <p className="text-[12px] font-semibold leading-tight text-[hsl(var(--dark-blue))] sm:text-lg xl:contents xl:text-xs xl:font-bold">
+                      <span className="xl:col-span-2 xl:col-start-2 xl:row-start-1 xl:break-words">
+                        {res.label.toUpperCase()}
+                      </span>
+                      <br className="xl:hidden" />
+                      <span className="xl:col-start-2 xl:row-start-2">
+                        ({res.type})
+                      </span>
                     </p>
                   </div>
 
-                  {/* Download Button */}
+                  {/* DOWNLOAD BUTTON */}
                   <button
                     type="button"
-                    className="mt-6 text-[10px] font-bold rounded-full border-[1.3px] border-[#0050D3] text-blue-600 px-2 py-0.5 hover:bg-blue-50"
+                    aria-label={`Download ${res.label}`}
+                    className="shrink-0 rounded-full border border-[#0050D3] px-4 py-2 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50 sm:px-5 sm:py-1.5 sm:text-sm xl:col-start-3 xl:row-start-2 xl:px-2 xl:py-0.5 xl:text-[10px] xl:font-bold"
                   >
                     Download
                   </button>
@@ -180,30 +258,34 @@ export default function OwnerHelpSupportPage() {
               );
             })}
           </div>
-        </div>
+        </section>
 
         {/* PLATFORM VERSION */}
-        <div className="rounded-xl border border-[#012247] bg-[#E6EFFD] p-5">
-          <h3 className="text-[14px] font-bold tracking-wide text-[hsl(var(--dark-blue))] mb-3">
+        <section className="min-w-0 rounded-xl border border-[#012247] bg-[#E6EFFD] p-4 sm:p-6 xl:p-5">
+          <h3 className="mb-3 text-sm font-bold tracking-wide text-[hsl(var(--dark-blue))] sm:text-lg xl:text-sm">
             PLATFORM VERSION
           </h3>
-          <p className="text-xs text-[#003FA799]"> {/* 99 = 60% opacity */}
+
+          <p className="text-xs text-[#003FA799] sm:text-sm xl:text-xs">
             Version:{" "}
             <span className="font-bold text-[#003FA7]">X.Y.Z</span>
           </p>
-          <p className="text-xs text-[#003FA799] mb-4">
+
+          <p className="mb-4 text-xs text-[#003FA799] sm:text-sm xl:text-xs">
             Last Updated:{" "}
-            <span className="font-bold text-[#003FA7]">[DATE]</span> {/* Change this later */}
+            <span className="font-bold text-[#003FA7]">[DATE]</span>
+            {/* Change this later */}
           </p>
 
-          <h3 className="text-[14px] font-bold tracking-wide text-[hsl(var(--dark-blue))] mb-1">
+          <h3 className="mb-1 text-sm font-bold tracking-wide text-[hsl(var(--dark-blue))] sm:text-lg xl:text-sm">
             DEVELOPER TEAM
           </h3>
-          <p className="text-xs text-[#003FA799]">
+
+          <p className="text-xs text-[#003FA799] sm:text-sm xl:text-xs">
             Developed By:{" "}
             <span className="font-bold text-[#003FA7]">FANTASTIC 5</span>
           </p>
-        </div>
+        </section>
       </div>
     </div>
   );
