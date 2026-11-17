@@ -39,6 +39,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      notifications: {
+        Row: {
+          assignment_id: string | null
+          body: string | null
+          category: string
+          created_at: string
+          id: string
+          kind: string
+          read_at: string | null
+          recipient_id: string
+          shift_id: string | null
+          title: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          body?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          kind: string
+          read_at?: string | null
+          recipient_id: string
+          shift_id?: string | null
+          title: string
+        }
+        Update: {
+          assignment_id?: string | null
+          body?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          recipient_id?: string
+          shift_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "shift_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_status: string
@@ -235,10 +296,7 @@ export type Database = {
         Args: { p_assignment_id: string }
         Returns: undefined
       }
-      cancel_shift: {
-        Args: { p_shift_id: string }
-        Returns: undefined
-      }
+      cancel_shift: { Args: { p_shift_id: string }; Returns: undefined }
       cancel_shift_offer: {
         Args: { p_assignment_id: string }
         Returns: undefined
@@ -255,14 +313,14 @@ export type Database = {
         Returns: boolean
       }
       list_workers: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
-          id: string
+          account_status: string
           employee_number: number
           first_name: string
+          id: string
           last_name: string
-          phone_number: string | null
-          account_status: string
+          phone_number: string
         }[]
       }
     }
