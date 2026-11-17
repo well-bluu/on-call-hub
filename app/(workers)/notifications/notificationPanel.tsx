@@ -29,6 +29,13 @@ export function NotificationsPanel({ initial }: { initial: Notification[] }) {
 
   const hasUnread = notifications.some((n) => !n.read);
 
+  const markAsRead = (id: string) => {
+    // Optimistic UI update
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+  };
+
   const markAllAsRead = () =>
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
@@ -56,7 +63,11 @@ export function NotificationsPanel({ initial }: { initial: Notification[] }) {
         {visible.length > 0 ? (
           <ul className="divide-y divide-slate-200">
             {visible.map((n) => (
-              <NotificationItem key={n.id} notification={n} />
+              <NotificationItem
+                key={n.id}
+                notification={n}
+                onMarkAsRead={markAsRead}
+              />
             ))}
           </ul>
         ) : (
