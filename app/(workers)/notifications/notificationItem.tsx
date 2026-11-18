@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Bell,
   Calendar,
@@ -24,8 +23,10 @@ const KIND_STYLES: Record<
 
 export function NotificationItem({
   notification,
+  onMarkAsRead,
 }: {
   notification: Notification;
+  onMarkAsRead: (id: string) => void;
 }) {
   const { icon: Icon, tile, icon_color } = KIND_STYLES[notification.kind];
 
@@ -50,13 +51,27 @@ export function NotificationItem({
           {notification.description}
         </p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <Link
-            href={notification.href ?? "#"}
-            className="inline-flex items-center gap-0.5 text-sm font-semibold text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-          >
-            View Details
-            <ChevronRight className="size-4" aria-hidden />
-          </Link>
+          {!notification.read && (
+            <button
+              type="button"
+              onClick={() => onMarkAsRead(notification.id)}
+              className="
+              mt-2 inline-flex
+              items-center gap-0.5
+              text-xs font-semibold
+              text-blue-700 hover:underline
+
+              focus-visible:outline-2
+              focus-visible:outline-offset-2
+              focus-visible:outline-blue-700
+
+              sm:text-sm
+            "
+            >
+              Mark as Read
+              <ChevronRight className="size-4" aria-hidden />
+            </button>
+          )}
           {/* Mobile: timestamp sits under the text instead of in its own column */}
           <span className="text-xs text-slate-400 sm:hidden">
             {notification.timeAgo}
