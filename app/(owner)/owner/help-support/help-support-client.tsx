@@ -111,13 +111,31 @@ const FAQS = [
 ];
 
 // ==========================================
-// DOCUMENTATION RESOURCES
+// DOCUMENTATION RESOURCES - change this 
 // ==========================================
 
 const RESOURCES = [
-  { icon: FileText, label: "Owner Manual", type: "PDF" },
-  { icon: ShieldCheck, label: "Shift Management", type: "PDF" },
-  { icon: Book, label: "Worker Management", type: "PDF" },
+  {
+    icon: FileText,
+    label: "Owner Manual",
+    type: "PDF",
+    file: "/documents/owner-manual.pdf",
+    downloadName: "owner-manual.pdf",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Shift Management",
+    type: "PDF",
+    file: "/documents/shift-management.pdf",
+    downloadName: "shift-management.pdf",
+  },
+  {
+    icon: Book,
+    label: "Worker Management",
+    type: "PDF",
+    file: "/documents/worker-management.pdf",
+    downloadName: "worker-management.pdf",
+  },
 ];
 
 // ==========================================
@@ -247,13 +265,14 @@ export default function OwnerHelpSupportPage() {
                   </div>
 
                   {/* DOWNLOAD BUTTON */}
-                  <button
-                    type="button"
+                  <a
+                    href={res.file}
+                    download={res.downloadName}
                     aria-label={`Download ${res.label}`}
                     className="shrink-0 rounded-full border border-[#0050D3] px-4 py-2 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50 sm:px-5 sm:py-1.5 sm:text-sm xl:col-start-3 xl:row-start-2 xl:px-2 xl:py-0.5 xl:text-[10px] xl:font-bold"
                   >
                     Download
-                  </button>
+                  </a>
                 </div>
               );
             })}
