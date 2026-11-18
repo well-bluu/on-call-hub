@@ -41,9 +41,27 @@ const FAQS = [
 ];
 
 const RESOURCES = [
-  { icon: FileText, label: "Worker Manual", type: "PDF" },
-  { icon: ShieldCheck, label: "Shift Policies", type: "PDF" },
-  { icon: BookOpen, label: "Guide Logs", type: "PDF" },
+  {
+    icon: FileText,
+    label: "Worker Manual",
+    type: "PDF",
+    file: "/documents/worker-manual.pdf",
+    downloadName: "worker-Manual.pdf",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Shift Policies",
+    type: "PDF",
+    file: "/documents/shift-policies.pdf",
+    downloadName: "shift-Policies.pdf",
+  },
+  {
+    icon: BookOpen,
+    label: "Guide Logs",
+    type: "PDF",
+    file: "/documents/guide-logs.pdf",
+    downloadName: "guide-Logs.pdf",
+  },
 ];
 
 export default function HelpSupportClient() {
@@ -223,13 +241,14 @@ export default function HelpSupportClient() {
                   </div>
 
                   <div className="flex w-full justify-end">
-                    <button
-                      type="button"
+                    <a
+                      href={resource.file}
+                      download={resource.downloadName}
                       aria-label={`Download ${resource.label}`}
                       className="rounded-full border border-[#0050D3] px-2 py-0.5 text-[10px] font-bold text-blue-600 transition-colors hover:bg-blue-50"
                     >
                       Download
-                    </button>
+                    </a>
                   </div>
                 </div>
               );
