@@ -86,6 +86,12 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
 
   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
 
+   Worker invitations require a server-only `SUPABASE_SECRET_KEY` (or legacy
+   `SUPABASE_SERVICE_ROLE_KEY`). Apply the database migrations before enabling
+   the action. Set the Supabase Auth Site URL to the app origin. For hosted
+   projects, configure the Invite user email template with the contents of
+   [invite.html](supabase/templates/invite.html) so the worker can set a password.
+
 5. You can now run the Next.js local development server:
 
    ```bash
