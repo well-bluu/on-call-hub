@@ -1,125 +1,112 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { PAGE_SIZE } from "./constants";
-import { INITIAL_NOTIFICATIONS } from "./mock-data";
-import type { Notification, NotificationFilter } from "./types";
-
-// ==========================================
-// useNotifications
-// ==========================================
-// Holds ALL notification state + logic (filtering, pagination, read actions).
-// This hook is the single place backend engineers need to touch.
+import {useEffect, useMemo, useState} from "react";
+import {PAGE_SIZE} from "./constants";
+import {
+	loadNotifications,
+	markAllNotificationsRead,
+	markNotificationRead,
+	subscribeToNotifications,
+} from "./queries";
+import type {Notification, NotificationFilter} from "./types";
 
 export function useNotifications() {
-  // ------------------------------------------
-  // DATA SOURCE
-  // ------------------------------------------
-  // BACKEND: Replace `INITIAL_NOTIFICATIONS` with real data.
-  //
-  // Option A (simple): fetch the owner's notifications on load
-  //   e.g. GET /api/owner/notifications  ->  Notification[]
-  //   and seed this state with the response (React Query / SWR / server
-  //   component prop all work). Keep the local `notifications` state so
-  //   optimistic updates below still feel instant.
-  //
-  // Option B (server-side filtering/pagination): pass `filter`, `page`
-  //   and `PAGE_SIZE` to the API and drop the client-side filtering and
-  //   slicing below. The API should also return the total count so
-  //   `totalPages` can be calculated.
-  const [notifications, setNotifications] = useState<Notification[]>(
-    INITIAL_NOTIFICATIONS,
-  );
+	const [notifications, setNotifications] = useState<Notification[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
-  // BACKEND: add loading / error state here if needed (isLoading, error).
+	useEffect(() => {
+		let alive = true;
 
-  const [filter, setFilter] = useState<NotificationFilter>("all");
-  const [page, setPage] = useState(1);
-  const [showAll, setShowAll] = useState(false);
+		loadNotifications()
+			.then((rows) => {
+				if (alive) setNotifications(rows);
+			})
+			.catch(() => {
+				if (alive) setError("Could not load notifications. Please refresh.");
+			})
+			.finally(() => {
+				if (alive) setIsLoading(false);
+			});
 
-  // ------------------------------------------
-  // FILTER NOTIFICATIONS
-  // ------------------------------------------
-  // BACKEND: Only needed for client-side filtering (Option A).
+		const unsubscribe = subscribeToNotifications((incoming) => {
+			setNotifications((prev) =>
+				prev.some((n) => n.id === incoming.id) ? prev : [incoming, ...prev],
+			);
+		});
 
-  const filtered = useMemo(
-    () =>
-      notifications.filter((n) => {
-        switch (filter) {
-          case "all":
-            return true;
+		return () => {
+			alive = false;
+			unsubscribe();
+		};
+	}, []);
 
-          case "unread":
-            return !n.read;
+	const [filter, setFilter] = useState<NotificationFilter>("all");
+	const [page, setPage] = useState(1);
+	const [showAll, setShowAll] = useState(false);
 
-          case "read":
-            return n.read;
+	const filtered = useMemo(
+		() =>
+			notifications.filter((n) => {
+				switch (filter) {
+					case "all":
+						return true;
+					case "unread":
+						return !n.read;
+					case "read":
+						return n.read;
+					default:
+						return n.category === filter;
+				}
+			}),
+		[notifications, filter],
+	);
 
-          default:
-            return n.category === filter;
-        }
-      }),
-    [notifications, filter],
-  );
+	const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+	const currentPage = Math.min(page, totalPages);
 
-  // ------------------------------------------
-  // PAGINATION
-  // ------------------------------------------
-  // BACKEND: With server-side pagination, `totalPages` should come from
-  // the API's total count instead of `filtered.length`.
+	const visible = showAll
+		? filtered
+		: filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
+	const changeFilter = (next: NotificationFilter) => {
+		setFilter(next);
+		setPage(1);
+	};
 
-  const visible = showAll
-    ? filtered
-    : filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+	const markAsRead = (id: string) => {
+		setNotifications((prev) =>
+			prev.map((n) => (n.id === id ? {...n, read: true} : n)),
+		);
 
-  // ------------------------------------------
-  // ACTIONS
-  // ------------------------------------------
+		markNotificationRead(id).catch(() => {
+			setNotifications((prev) =>
+				prev.map((n) => (n.id === id ? {...n, read: false} : n)),
+			);
+		});
+	};
 
-  const changeFilter = (next: NotificationFilter) => {
-    setFilter(next);
-    setPage(1);
-  };
+	const markAllAsRead = () => {
+		const previous = notifications;
+		setNotifications((prev) => prev.map((n) => ({...n, read: true})));
 
-  const markAsRead = (id: string) => {
-    // Optimistic UI update
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
+		markAllNotificationsRead().catch(() => setNotifications(previous));
+	};
 
-    // BACKEND: Persist to the database here.
-    //   e.g. PATCH /api/owner/notifications/:id  { read: true }
-    // On failure, roll the notification back to `read: false`.
-  };
+	const toggleShowAll = () => setShowAll((v) => !v);
 
-  const markAllAsRead = () => {
-    // Optimistic UI update
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-
-    // BACKEND: Persist to the database here.
-    //   e.g. POST /api/owner/notifications/mark-all-read
-    // On failure, restore the previous state.
-  };
-
-  const toggleShowAll = () => setShowAll((v) => !v);
-
-  return {
-    // data
-    visible,
-    // filter
-    filter,
-    changeFilter,
-    // pagination
-    currentPage,
-    totalPages,
-    setPage,
-    showAll,
-    toggleShowAll,
-    // actions
-    markAsRead,
-    markAllAsRead,
-  };
+	return {
+		visible,
+		isLoading,
+		error,
+		filter,
+		changeFilter,
+		currentPage,
+		totalPages,
+		setPage,
+		showAll,
+		toggleShowAll,
+		markAsRead,
+		markAllAsRead,
+	};
 }
