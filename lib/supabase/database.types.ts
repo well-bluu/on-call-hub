@@ -296,6 +296,10 @@ export type Database = {
         Args: { p_assignment_id: string }
         Returns: undefined
       }
+      reserve_worker_invite: {
+        Args: { owner_id: string; worker_email: string }
+        Returns: boolean
+      }
       cancel_shift: { Args: { p_shift_id: string }; Returns: undefined }
       cancel_shift_offer: {
         Args: { p_assignment_id: string }
@@ -356,6 +360,7 @@ export type Database = {
         | "help.view.owner"
         | "help.view.worker"
         | "document.view.all"
+        | "worker.create"
       app_role: "owner" | "worker"
     }
     CompositeTypes: {
@@ -518,6 +523,7 @@ export const Constants = {
         "help.view.owner",
         "help.view.worker",
         "document.view.all",
+        "worker.create",
       ],
       app_role: ["owner", "worker"],
     },

@@ -18,11 +18,12 @@ export async function GET(request: NextRequest) {
 			token_hash,
 		});
 		if (!error) {
-			// redirect user to specified redirect URL or root of app
-			redirect(next);
+			redirect(type === "invite" ? "/auth/update-password" : next);
 		}
 	}
 
-	// redirect the user to an error page with some instructions
-	redirect("/auth/auth-code-error");
+	const message = type === "invite"
+		? "This invitation is invalid or has expired."
+		: "This confirmation link is invalid or has expired.";
+	redirect(`/auth/error?error=${encodeURIComponent(message)}`);
 }
