@@ -41,18 +41,17 @@ type Availability = "Available" | "On Leave" | "Busy";
 type WorkerStatus = "Active" | "Inactive";
 
 interface Worker {
+  localOnly?: boolean;
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   contact: string;
   availability: Availability;
   status: WorkerStatus;
 }
 
-interface WorkerRow {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  account_status: string | null;
+function workerName(worker: Worker) {
+  return [worker.firstName, worker.lastName].filter(Boolean).join(" ") || "Unnamed Worker";
 }
 
 interface Activity {
@@ -799,15 +798,85 @@ function PersonalInformationForm({
 // WORKERS TABLE + MOBILE CARD VIEW
 // ==========================================
 
+function WorkerDialog({ worker, mode, onClose, onUpdated }: {
+  worker: Worker;
+  mode: "edit" | "deactivate";
+  onClose: () => void;
+  onUpdated: (worker: Worker) => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const editing = mode === "edit";
+
+  useEffect(() => {
+    const element = dialog.current;
+    element?.showModal();
+    return () => element?.close();
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const changes = editing ? {
+      first_name: String(form.get("firstName")).trim(),
+      last_name: String(form.get("lastName")).trim(),
+      phone_number: String(form.get("phone")).trim() || null,
+    } : { account_status: "inactive" };
+    if (editing && !changes.first_name) {
+      setError("Enter a first name.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const { data, error } = await createClient().from("profiles").update(changes)
+        .eq("id", worker.id).select("first_name,last_name,phone_number,account_status").single();
+      if (error) throw error;
+      onUpdated({ ...worker, firstName: data.first_name, lastName: data.last_name,
+        contact: data.phone_number ?? "", status: data.account_status === "active" ? "Active" : "Inactive" });
+      onClose();
+    } catch {
+      setError("Could not save this change. Refresh the worker list and try again.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <dialog ref={dialog} aria-labelledby="worker-dialog-title"
+      onCancel={(event) => { event.preventDefault(); if (!saving) onClose(); }}
+      className="m-auto w-96 max-w-[95vw] rounded-xl p-6 backdrop:bg-black/40">
+      <form onSubmit={submit} className="grid gap-4">
+        <h2 id="worker-dialog-title" className="text-lg font-bold">
+          {editing ? "Edit" : "Deactivate"} {workerName(worker)}
+        </h2>
+        {editing ? <>
+          <label>First name<input className={inputClass} name="firstName" required defaultValue={worker.firstName} /></label>
+          <label>Last name<input className={inputClass} name="lastName" defaultValue={worker.lastName} /></label>
+          <label>Phone number<input className={inputClass} name="phone" type="tel" defaultValue={worker.contact} /></label>
+        </> : <p>This worker will lose sign-in access and stop receiving new shift offers. Their past shifts will stay on record.</p>}
+        {error && <p role="alert">{error}</p>}
+        <div className="flex justify-end gap-4">
+          <button type="button" disabled={saving} onClick={onClose}>Cancel</button>
+          <button type="submit" disabled={saving} className="font-bold">{editing ? "Save changes" : "Deactivate"}</button>
+        </div>
+      </form>
+    </dialog>
+  );
+}
+
 export function WorkersTable({
   workers,
-  onDelete,
+  onUpdated,
+  onDiscard,
   actionStyle = "outline",
 }: {
   workers: Worker[];
-  onDelete: (id: string) => void;
+  onUpdated: (worker: Worker) => void;
+  onDiscard: (id: string) => void;
   actionStyle?: "outline" | "solid";
 }) {
+  const [selection, setSelection] = useState<{ worker: Worker; mode: "edit" | "deactivate" } | null>(null);
   const editClass =
     actionStyle === "solid"
       ? "bg-blue-600 text-white hover:bg-blue-700"
@@ -851,7 +920,7 @@ export function WorkersTable({
 
                 <div className="min-w-0">
                   <p className={`truncate text-sm font-bold ${navy}`}>
-                    {worker.name}
+                    {workerName(worker)}
                   </p>
 
                   <p className="mt-0.5 text-[11px] text-slate-500">
@@ -898,7 +967,9 @@ export function WorkersTable({
             <div className="mt-3 flex justify-end gap-2 border-t border-slate-100 pt-3">
               <button
                 type="button"
-                aria-label={`Edit ${worker.name}`}
+                disabled={worker.localOnly}
+                onClick={() => setSelection({ worker, mode: "edit" })}
+                aria-label={`Edit ${workerName(worker)}`}
                 className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${editClass}`}
               >
                 <SquarePen className="size-4" strokeWidth={1.75} aria-hidden />
@@ -906,8 +977,9 @@ export function WorkersTable({
 
               <button
                 type="button"
-                onClick={() => onDelete(worker.id)}
-                aria-label={`Delete ${worker.name}`}
+                disabled={worker.status === "Inactive"}
+                onClick={() => worker.localOnly ? onDiscard(worker.id) : setSelection({ worker, mode: "deactivate" })}
+                aria-label={`${worker.localOnly ? "Remove" : "Deactivate"} ${workerName(worker)}`}
                 className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${deleteClass}`}
               >
                 <Trash2 className="size-4" strokeWidth={1.75} aria-hidden />
@@ -963,7 +1035,7 @@ export function WorkersTable({
                     </span>
 
                     <span className="truncate text-xs font-bold">
-                      {worker.name}
+                      {workerName(worker)}
                     </span>
                   </div>
                 </td>
@@ -996,7 +1068,9 @@ export function WorkersTable({
                   <div className="flex items-center justify-center gap-2">
                     <button
                       type="button"
-                      aria-label={`Edit ${worker.name}`}
+                      disabled={worker.localOnly}
+                      onClick={() => setSelection({ worker, mode: "edit" })}
+                      aria-label={`Edit ${workerName(worker)}`}
                       className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${editClass}`}
                     >
                       <SquarePen className="size-4" strokeWidth={1.75} aria-hidden />
@@ -1004,8 +1078,9 @@ export function WorkersTable({
 
                     <button
                       type="button"
-                      onClick={() => onDelete(worker.id)}
-                      aria-label={`Delete ${worker.name}`}
+                      disabled={worker.status === "Inactive"}
+                      onClick={() => worker.localOnly ? onDiscard(worker.id) : setSelection({ worker, mode: "deactivate" })}
+                      aria-label={`${worker.localOnly ? "Remove" : "Deactivate"} ${workerName(worker)}`}
                       className={`flex size-9 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${deleteClass}`}
                     >
                       <Trash2 className="size-4" strokeWidth={1.75} aria-hidden />
@@ -1017,6 +1092,9 @@ export function WorkersTable({
           </tbody>
         </table>
       </div>
+      {selection && (
+        <WorkerDialog {...selection} onClose={() => setSelection(null)} onUpdated={onUpdated} />
+      )}
     </section>
   );
 }
@@ -1040,21 +1118,14 @@ export default function OwnerWorkersPage() {
 
         if (error) throw error;
 
-        const rows = (data ?? []) as WorkerRow[];
-
-        const mappedWorkers: Worker[] = rows.map((worker) => {
-          const name =
-            `${worker.first_name ?? ""} ${worker.last_name ?? ""}`.trim();
-
-          return {
-            id: worker.id,
-            name: name || "Unnamed Worker",
-            contact: "",
-            availability: "Available",
-            status:
-              worker.account_status === "active" ? "Active" : "Inactive",
-          };
-        });
+        const mappedWorkers: Worker[] = (data ?? []).map((row) => ({
+          id: row.id,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          contact: row.phone_number ?? "",
+          availability: "Available",
+          status: row.account_status === "active" ? "Active" : "Inactive",
+        }));
 
         if (alive) {
           setWorkers(mappedWorkers);
@@ -1076,22 +1147,19 @@ export default function OwnerWorkersPage() {
   }, []);
 
   const addWorker = (form: FormState) => {
+    const [firstName, ...rest] = form.fullName.trim().split(/\s+/);
     setWorkers((previous) => [
       ...previous,
       {
         id: crypto.randomUUID(),
-        name: form.fullName.trim(),
+        localOnly: true,
+        firstName,
+        lastName: rest.join(" "),
         contact: form.phone,
         availability: "Available",
         status: "Active",
       },
     ]);
-  };
-
-  const deleteWorker = (id: string) => {
-    setWorkers((previous) =>
-      previous.filter((worker) => worker.id !== id)
-    );
   };
 
   const activeWorkers = workers.filter(
@@ -1145,7 +1213,10 @@ export default function OwnerWorkersPage() {
       {/* WORKERS LIST */}
       <WorkersTable
         workers={workers}
-        onDelete={deleteWorker}
+        onDiscard={(id) => setWorkers((previous) => previous.filter((worker) => worker.id !== id))}
+        onUpdated={(updated) => setWorkers((previous) => previous.map((worker) =>
+          worker.id === updated.id ? updated : worker
+        ))}
         actionStyle="outline"
       />
     </div>
