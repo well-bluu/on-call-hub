@@ -34,6 +34,10 @@ function toUiCategory(kind: string): NotificationCategory {
 	return WORKER_RESPONSE_KINDS.has(kind) ? "worker_responses" : "shift_updates";
 }
 
+export function formatTimeAgo(createdAt: string): string {
+	return formatDistanceToNow(new Date(createdAt), {addSuffix: true});
+}
+
 export function toUiNotification(row: NotificationRow): Notification {
 	return {
 		id: row.id,
@@ -41,12 +45,12 @@ export function toUiNotification(row: NotificationRow): Notification {
 		category: toUiCategory(row.kind),
 		title: row.title,
 		description: row.body ?? "",
-		timeAgo: formatDistanceToNow(new Date(row.created_at), {addSuffix: true}),
+		timeAgo: formatTimeAgo(row.created_at),
 		read: row.read_at !== null,
 	};
 }
 
-export async function loadNotifications(): Promise<Notification[]> {
+export async function loadNotificationRows(): Promise<NotificationRow[]> {
 	const {data, error} = await createClient()
 		.from("notifications")
 		.select("*")
@@ -54,11 +58,16 @@ export async function loadNotifications(): Promise<Notification[]> {
 		.limit(200);
 
 	if (error) throw error;
-	return data.map(toUiNotification);
+	return data;
 }
 
-export function subscribeToNotifications(
-	onInsert: (notification: Notification) => void,
+export async function loadNotifications(): Promise<Notification[]> {
+	const rows = await loadNotificationRows();
+	return rows.map(toUiNotification);
+}
+
+export function subscribeToNotificationRows(
+	onInsert: (row: NotificationRow) => void,
 ): () => void {
 	const supabase = createClient();
 	const channel = supabase
@@ -66,13 +75,19 @@ export function subscribeToNotifications(
 		.on(
 			"postgres_changes",
 			{event: "INSERT", schema: "public", table: "notifications"},
-			(payload) => onInsert(toUiNotification(payload.new as NotificationRow)),
+			(payload) => onInsert(payload.new as NotificationRow),
 		)
 		.subscribe();
 
 	return () => {
 		void supabase.removeChannel(channel);
 	};
+}
+
+export function subscribeToNotifications(
+	onInsert: (notification: Notification) => void,
+): () => void {
+	return subscribeToNotificationRows((row) => onInsert(toUiNotification(row)));
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
