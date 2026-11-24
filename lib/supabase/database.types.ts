@@ -39,6 +39,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      emergency_cancellation_requests: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          reason: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          shift_id: string
+          status: string
+          worker_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shift_id: string
+          status?: string
+          worker_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shift_id?: string
+          status?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_cancellation_requests_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "shift_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_cancellation_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_cancellation_requests_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_cancellation_requests_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           assignment_id: string | null
@@ -296,7 +364,11 @@ export type Database = {
         Args: { p_assignment_id: string }
         Returns: undefined
       }
-      reserve_worker_invite: {
+      approve_cancellation_request: {
+        Args: { p_note?: string; p_request_id: string }
+        Returns: undefined
+      }
+      can_invite_new_worker: {
         Args: { owner_id: string; worker_email: string }
         Returns: boolean
       }
@@ -326,6 +398,14 @@ export type Database = {
           last_name: string
           phone_number: string
         }[]
+      }
+      reject_cancellation_request: {
+        Args: { p_note?: string; p_request_id: string }
+        Returns: undefined
+      }
+      request_shift_cancellation: {
+        Args: { p_assignment_id: string; p_reason: string }
+        Returns: string
       }
     }
     Enums: {
