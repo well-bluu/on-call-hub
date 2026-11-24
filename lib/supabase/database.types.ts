@@ -407,6 +407,10 @@ export type Database = {
         Args: { p_assignment_id: string; p_reason: string }
         Returns: string
       }
+      reserve_worker_invite: {
+        Args: { owner_id: string; worker_email: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_permission:
