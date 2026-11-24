@@ -1,18 +1,12 @@
-
 "use client";
 
-import {
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-	type FormEvent,
-} from "react";
+import {useCallback, useEffect, useRef, useState, type FormEvent} from "react";
 import type {StaticImageData} from "next/image";
 import {ChevronDown, ChevronLeft, ChevronRight, Users} from "lucide-react";
 import bannerImage from "@/components/assets/images/shift-management-banner.png";
 import {createClient} from "@/lib/supabase/client";
 import {toLocalKey, toLocalTime} from "@/lib/shifts/format";
+import {CancellationRequests} from "./cancellation-requests";
 
 /* Shift types */
 type ShiftColor = "green" | "blue" | "orange";
@@ -37,12 +31,7 @@ interface CalendarShift {
 	extraCount?: number;
 }
 
-const TASKS = [
-  "Coating",
-  "Packaging",
-  "Mixing",
-  "Ice Cream Production",
-];
+const TASKS = ["Coating", "Packaging", "Mixing", "Ice Cream Production"];
 
 const WORKER_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({
 	value: String(n),
@@ -706,8 +695,7 @@ function AddShiftForm({onAdd}: {onAdd: (f: FormState) => Promise<void>}) {
 	);
 }
 
-const GRID =
-  "grid grid-cols-[191fr_220fr_213fr_185fr_146fr] items-center";
+const GRID = "grid grid-cols-[191fr_220fr_213fr_185fr_146fr] items-center";
 
 function ShiftsTable({
 	id,
@@ -745,15 +733,20 @@ function ShiftsTable({
 				<div className="min-w-[52rem]">
 					{/* Table header */}
 					<div className={GRID}>
-						{["Date", "Time", "Filled / Required", "Task", "Status", "Actions"].map(
-							(h) => (
-								<span
-									key={h}
-									className={`justify-self-center whitespace-nowrap rounded-lg bg-[#C9DAF5] px-4 py-1 text-base font-bold uppercase ${navy}`}>
-									{h}
-								</span>
-							),
-						)}
+						{[
+							"Date",
+							"Time",
+							"Filled / Required",
+							"Task",
+							"Status",
+							"Actions",
+						].map((h) => (
+							<span
+								key={h}
+								className={`justify-self-center whitespace-nowrap rounded-lg bg-[#C9DAF5] px-4 py-1 text-base font-bold uppercase ${navy}`}>
+								{h}
+							</span>
+						))}
 					</div>
 
 					<div className="mt-8 flex flex-col gap-8">
@@ -805,10 +798,16 @@ function ShiftsTable({
 									<span className="flex justify-center gap-3 text-xs normal-case">
 										{r.status === "open" || r.status === "filled" ? (
 											<>
-												<button type="button" onClick={() => onEdit(r)} className="underline">
+												<button
+													type="button"
+													onClick={() => onEdit(r)}
+													className="underline">
 													Edit
 												</button>
-												<button type="button" onClick={() => onCancel(r)} className="underline">
+												<button
+													type="button"
+													onClick={() => onCancel(r)}
+													className="underline">
 													Cancel
 												</button>
 											</>
@@ -976,26 +975,45 @@ function EditShiftDialog({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+			role="dialog"
+			aria-modal="true">
 			<form onSubmit={save} className={`w-full max-w-md p-6 ${card}`}>
 				<h2 className={`text-lg font-bold uppercase ${navy}`}>Edit Shift</h2>
 				<p className="mt-1 text-xs text-slate-500">
-					To change the date, time or number of workers, cancel this shift and create a new one.
+					To change the date, time or number of workers, cancel this shift and
+					create a new one.
 				</p>
 				<label className="mt-4 block text-sm font-semibold">
 					Shift name
-					<input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
+					<input
+						className={inputClass}
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+					/>
 				</label>
 				<label className="mt-3 block text-sm font-semibold">
 					Notes
-					<textarea className={inputClass} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+					<textarea
+						className={inputClass}
+						rows={3}
+						value={notes}
+						onChange={(e) => setNotes(e.target.value)}
+					/>
 				</label>
 				{error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 				<div className="mt-5 flex justify-end gap-3">
-					<button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm">
+					<button
+						type="button"
+						onClick={onClose}
+						className="rounded-lg border px-4 py-2 text-sm">
 						Close
 					</button>
-					<button type="submit" disabled={saving} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+					<button
+						type="submit"
+						disabled={saving}
+						className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
 						{saving ? "Saving..." : "Save"}
 					</button>
 				</div>
@@ -1016,7 +1034,9 @@ export default function OwnerShiftManagementPage() {
 	const loadShifts = useCallback(async () => {
 		const {data, error} = await createClient()
 			.from("shifts")
-			.select("id, shift_name, starts_at, ends_at, required_workers, notes, status, shift_assignments(response_status)")
+			.select(
+				"id, shift_name, starts_at, ends_at, required_workers, notes, status, shift_assignments(response_status)",
+			)
 			.order("starts_at");
 		if (error) {
 			setPageError("Could not load shifts. Please refresh the page.");
@@ -1035,7 +1055,9 @@ export default function OwnerShiftManagementPage() {
 					end: toLocalTime(end),
 					task: shift.shift_name,
 					required: shift.required_workers,
-					filled: shift.shift_assignments.filter((a) => a.response_status === "accepted").length,
+					filled: shift.shift_assignments.filter(
+						(a) => a.response_status === "accepted",
+					).length,
 					notes: shift.notes ?? undefined,
 					status: shift.status,
 					startsAt: shift.starts_at,
@@ -1050,7 +1072,9 @@ export default function OwnerShiftManagementPage() {
 
 	const sorted = rows;
 	const upcoming = sorted.filter(
-		(row) => row.status !== "cancelled" && new Date(row.startsAt).getTime() >= loadedAt,
+		(row) =>
+			row.status !== "cancelled" &&
+			new Date(row.startsAt).getTime() >= loadedAt,
 	);
 	const calendar: Record<string, CalendarShift> = {};
 	for (const row of sorted) {
@@ -1069,22 +1093,25 @@ export default function OwnerShiftManagementPage() {
 		const endDate = new Date(`${f.date}T${f.end}`);
 		if (endDate <= startDate) endDate.setDate(endDate.getDate() + 1);
 
-		const {error} = await supabase
-			.from("shifts")
-			.insert({
-				shift_name: f.name,
-				starts_at: startDate.toISOString(),
-				ends_at: endDate.toISOString(),
-				required_workers: required,
-				notes: f.notes.trim() || null,
-			});
+		const {error} = await supabase.from("shifts").insert({
+			shift_name: f.name,
+			starts_at: startDate.toISOString(),
+			ends_at: endDate.toISOString(),
+			required_workers: required,
+			notes: f.notes.trim() || null,
+		});
 
 		if (error) throw error;
 		await loadShifts();
 	};
 
 	const cancelShift = async (row: ShiftRow) => {
-		if (!window.confirm(`Cancel ${row.task} on ${fmtDate(row.date)}? Pending offers will be withdrawn.`)) return;
+		if (
+			!window.confirm(
+				`Cancel ${row.task} on ${fmtDate(row.date)}? Pending offers will be withdrawn.`,
+			)
+		)
+			return;
 		const {error} = await supabase.rpc("cancel_shift", {p_shift_id: row.id});
 		if (error) {
 			setPageError("Could not cancel the shift. Please try again.");
@@ -1096,7 +1123,10 @@ export default function OwnerShiftManagementPage() {
 	return (
 		<div className="flex flex-col gap-10">
 			<Banner image={bannerImage} />
-			{pageError && <p className="text-sm font-semibold text-red-600">{pageError}</p>}
+			{pageError && (
+				<p className="text-sm font-semibold text-red-600">{pageError}</p>
+			)}
+			<CancellationRequests onChanged={loadShifts} />
 			<AddShiftForm onAdd={addShift} />
 
 			{/* Upcoming shifts */}
