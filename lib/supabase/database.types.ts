@@ -329,6 +329,41 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_documents: {
+        Row: {
+          document_type: string
+          file_name: string
+          id: string
+          storage_path: string
+          uploaded_at: string
+          worker_id: string
+        }
+        Insert: {
+          document_type: string
+          file_name: string
+          id?: string
+          storage_path: string
+          uploaded_at?: string
+          worker_id: string
+        }
+        Update: {
+          document_type?: string
+          file_name?: string
+          id?: string
+          storage_path?: string
+          uploaded_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_documents_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       worker_priority_queue: {
         Row: {
           consecutive_declines: number
