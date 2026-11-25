@@ -2,6 +2,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -32,6 +33,7 @@ import {
 
 import bannerImage from "@/components/assets/images/workerBanner.png";
 import { createClient } from "@/lib/supabase/client";
+import { createWorker } from "./actions";
 
 // ==========================================
 // WORKER AND ACTIVITY TYPES
@@ -683,9 +685,11 @@ function DatePicker({
 function PersonalInformationForm({
   onAdd,
 }: {
-  onAdd: (form: FormState) => void;
+  onAdd: (form: FormState) => Promise<boolean>;
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [sending, setSending] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const set =
     (key: keyof FormState) =>
@@ -696,13 +700,19 @@ function PersonalInformationForm({
       }));
     };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!form.fullName.trim()) return;
-
-    onAdd(form);
-    setForm(EMPTY_FORM);
+    if (sending || !form.fullName.trim()) return;
+    setSending(true);
+    setSubmitError("");
+    try {
+      if (await onAdd(form)) setForm((current) => current === form ? EMPTY_FORM : current);
+    } catch {
+      setSubmitError("Could not confirm the invitation. Refresh the worker list before trying again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -785,11 +795,13 @@ function PersonalInformationForm({
       <div className="mt-6 flex justify-end px-1 sm:mt-auto sm:pt-7">
         <button
           type="submit"
+          disabled={sending}
           className="h-10 w-full rounded-lg border-2 border-blue-700 bg-white px-6 text-sm font-bold uppercase text-blue-700 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:w-auto sm:text-base"
         >
-          Add Worker
+          {sending ? "Sending invitation…" : "Add Worker"}
         </button>
       </div>
+      {submitError && <p role="alert" className="mt-2 text-sm text-red-600">{submitError}</p>}
     </form>
   );
 }
@@ -920,7 +932,9 @@ export function WorkersTable({
 
                 <div className="min-w-0">
                   <p className={`truncate text-sm font-bold ${navy}`}>
-                    {workerName(worker)}
+                    <Link href={`/owner/workers/${worker.id}`} className="hover:underline">
+                      {workerName(worker)}
+                    </Link>
                   </p>
 
                   <p className="mt-0.5 text-[11px] text-slate-500">
@@ -1035,7 +1049,9 @@ export function WorkersTable({
                     </span>
 
                     <span className="truncate text-xs font-bold">
-                      {workerName(worker)}
+                      <Link href={`/owner/workers/${worker.id}`} className="hover:underline">
+                        {workerName(worker)}
+                      </Link>
                     </span>
                   </div>
                 </td>
@@ -1107,59 +1123,50 @@ export default function OwnerWorkersPage() {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loadingWorkers, setLoadingWorkers] = useState(true);
 
-  // Load workers using the same Supabase RPC as the Owner Dashboard.
-  useEffect(() => {
-    let alive = true;
+  const [message, setMessage] = useState("");
 
-    async function loadWorkers() {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase.rpc("list_workers");
-
-        if (error) throw error;
-
-        const mappedWorkers: Worker[] = (data ?? []).map((row) => ({
-          id: row.id,
-          firstName: row.first_name,
-          lastName: row.last_name,
-          contact: row.phone_number ?? "",
-          availability: "Available",
-          status: row.account_status === "active" ? "Active" : "Inactive",
-        }));
-
-        if (alive) {
-          setWorkers(mappedWorkers);
-        }
-      } catch (error) {
-        console.error("Failed to load workers:", error);
-      } finally {
-        if (alive) {
-          setLoadingWorkers(false);
-        }
-      }
+  const loadWorkers = useCallback(async () => {
+    try {
+      const { data, error } = await createClient().rpc("list_workers");
+      if (error) throw error;
+      setWorkers(data.map((row) => ({
+        id: row.id,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        contact: row.phone_number ?? "",
+        availability: "Available",
+        status: row.account_status === "active" ? "Active" : "Inactive",
+      })));
+    } catch {
+      setMessage("Could not load workers. Please refresh the page.");
+    } finally {
+      setLoadingWorkers(false);
     }
-
-    void loadWorkers();
-
-    return () => {
-      alive = false;
-    };
   }, []);
 
-  const addWorker = (form: FormState) => {
-    const [firstName, ...rest] = form.fullName.trim().split(/\s+/);
-    setWorkers((previous) => [
-      ...previous,
-      {
-        id: crypto.randomUUID(),
-        localOnly: true,
-        firstName,
-        lastName: rest.join(" "),
-        contact: form.phone,
-        availability: "Available",
-        status: "Active",
-      },
-    ]);
+  useEffect(() => {
+    void loadWorkers();
+  }, [loadWorkers]);
+
+  const addWorker = async (form: FormState): Promise<boolean> => {
+    const email = form.email.trim();
+    if (!email) {
+      setMessage("Enter the worker's email address so we can send the invitation.");
+      return false;
+    }
+    setMessage("");
+    const result = await createWorker({
+      email,
+      fullName: form.fullName,
+      phone: form.phone.trim() || undefined,
+    });
+    if (!result.ok) {
+      setMessage(result.error);
+      return false;
+    }
+    setMessage(`Invitation sent to ${email}.`);
+    await loadWorkers();
+    return true;
   };
 
   const activeWorkers = workers.filter(
@@ -1188,6 +1195,12 @@ export default function OwnerWorkersPage() {
           {loadingWorkers && (
             <p className="text-center text-xs text-slate-500">
               Loading workers...
+            </p>
+          )}
+
+          {message && (
+            <p role="status" className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-[hsl(var(--dark-blue))]">
+              {message}
             </p>
           )}
 
