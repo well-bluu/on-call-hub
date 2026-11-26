@@ -40,10 +40,10 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
           // Close the mobile drawer after tapping a link
           if ((e.target as HTMLElement).closest("a")) setMobileOpen(false);
         }}
-        className={`fixed inset-y-0 left-0 z-40 w-80 shrink-0 overflow-hidden bg-[hsl(var(--dark-blue))] transition-transform duration-300 ease-in-out
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-          md:sticky md:top-0 md:h-screen md:translate-x-0 md:transition-[width]
-          ${desktopOpen ? "md:w-80" : "md:w-16"}`}
+        className={`fixed inset-y-0 left-0 z-40 w-[260px] shrink-0 overflow-hidden bg-[hsl(var(--dark-blue))] transition-transform duration-300 ease-in-out
+    ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+    md:sticky md:top-0 md:h-screen md:translate-x-0 md:transition-[width]
+    ${desktopOpen ? "md:w-[260px]" : "md:w-16"}`}
       >
         {/* Toggle: part of the sidebar, not floating */}
         <button
@@ -63,7 +63,7 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
 
         {/* Fixed inner width so nothing squishes; fades out when collapsed */}
         <div
-          className={`h-full w-80 transition-opacity duration-200 ${
+          className={`h-full w-[260px] transition-opacity duration-200 ${
             desktopOpen ? "opacity-100" : "md:pointer-events-none md:opacity-0"
           }`}
         >

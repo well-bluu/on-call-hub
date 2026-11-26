@@ -40,7 +40,7 @@ export function NavbarLinks({ role }: { role: Role | null }) {
   const isActive = (path: string) => pathname === path;
 
   const linkBaseStyle =
-    "flex items-center gap-3 px-4 py-3 text-left transition-colors border rounded-lg text-sm group";
+    "flex w-* items-center gap-2 px-3 py-1.5 text-left transition-colors border rounded-md text-xs group";
   const activeStyle = "bg-white text-[hsl(var(--dark-blue))] border-white";
   const inactiveStyle =
     "text-white border-white hover:text-[hsl(var(--dark-blue))] hover:bg-white";
@@ -49,7 +49,7 @@ export function NavbarLinks({ role }: { role: Role | null }) {
   const links = role === "owner" ? ownerLinks : workerLinks;
 
   return (
-    <div className="text-sm flex flex-col gap-10 font-sans">
+    <div className="text-sm flex flex-col gap-5 font-sans">
       {links.map((link) => {
         const LinkIcon = link.icon;
 
