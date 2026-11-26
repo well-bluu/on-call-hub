@@ -21,6 +21,11 @@ function friendlyError(message: string): string {
 		return "Please give a reason for cancelling.";
 	if (message.includes("This request was already"))
 		return "This request was already reviewed.";
+	if (
+		message.includes("can no longer be changed") ||
+		message.includes("no longer on this shift")
+	)
+		return "This shift was cancelled or changed. Reject the request instead.";
 	if (message.includes("not found")) return "This request no longer exists.";
 	if (message.includes("not yours"))
 		return "This shift is not available to cancel.";
@@ -89,7 +94,7 @@ export async function approveCancellation(
 
 	return error
 		? friendlyError(error.message)
-		: "Cancellation approved. The shift has been offered to the next worker.";
+		: "Cancellation approved. The shift is open again and will go to the next available worker.";
 }
 
 export async function rejectCancellation(
