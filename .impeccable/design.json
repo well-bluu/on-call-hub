@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T00:00:00Z",
+  "title": "Design System: On Call Hub",
+  "extensions": {
+    "colorMeta": {
+      "action-blue": { "role": "primary", "displayName": "Action Blue", "canonical": "#0050D3", "tonalRamp": ["#001A47", "#00296E", "#003FA7", "#0050D3", "#3D7BE6", "#7FA8F0", "#C9DAF8", "#E6EFFD"] },
+      "action-blue-deep": { "role": "primary", "displayName": "Deep Action Blue", "canonical": "#003FA7", "tonalRamp": ["#00163B", "#00225C", "#00317F", "#003FA7", "#2E62C2", "#6E93DA", "#B5CBEF", "#E3ECFB"] },
+      "scoop-orange": { "role": "secondary", "displayName": "Scoop Orange", "canonical": "#FD950F", "tonalRamp": ["#4A2A02", "#7A4604", "#B86804", "#FD950F", "#FEAF4A", "#FEC985", "#FEE2BF", "#FEF3E6"] },
+      "night-navy": { "role": "neutral", "displayName": "Night Navy", "canonical": "hsl(211 97% 14%)", "tonalRamp": ["#000B17", "#01152B", "#012247", "#0B3A6E", "#2F5C93", "#6886AE", "#A9BBD3", "#E3EAF2"] },
+      "ink-navy": { "role": "neutral", "displayName": "Ink Navy", "canonical": "#0B2A4A", "tonalRamp": ["#030D18", "#06182B", "#0B2A4A", "#1F4570", "#4A6C93", "#7F98B5", "#B9C8D8", "#E7EDF3"] },
+      "go-green": { "role": "tertiary", "displayName": "Go Green", "canonical": "#1FAA59", "tonalRamp": ["#06311A", "#0C5A2D", "#158240", "#1FAA59", "#55C383", "#8DD8AC", "#C6EBD4", "#E3F4E6"] },
+      "stop-red": { "role": "tertiary", "displayName": "Stop Red", "canonical": "#FF0000", "tonalRamp": ["#4A0000", "#7A0000", "#B80000", "#FF0000", "#FF4D4D", "#FF8A8A", "#FCC4C4", "#FBDEDE"] },
+      "blue-wash": { "role": "neutral", "displayName": "Blue Wash", "canonical": "#E6EFFD" },
+      "pill-blue": { "role": "neutral", "displayName": "Pill Blue", "canonical": "#C9DAF8" },
+      "orange-wash": { "role": "neutral", "displayName": "Orange Wash", "canonical": "#FEF3E6" },
+      "green-wash": { "role": "neutral", "displayName": "Green Wash", "canonical": "#E3F4E6" },
+      "red-wash": { "role": "neutral", "displayName": "Red Wash", "canonical": "#FBDEDE" },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "hsl(0 0% 89.8%)" },
+      "divider-grey": { "role": "neutral", "displayName": "Divider Grey", "canonical": "#D9D9D9" },
+      "quiet-grey": { "role": "neutral", "displayName": "Quiet Grey", "canonical": "hsl(0 0% 45.1%)" },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#FFFFFF" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page heroes only, in capitals." },
+      "headline": { "displayName": "Headline", "purpose": "Card titles, in capitals." },
+      "title": { "displayName": "Title", "purpose": "Row titles, names, stat captions." },
+      "body": { "displayName": "Body", "purpose": "Sentences and descriptions, normal case. 16px in inputs on phones." },
+      "label": { "displayName": "Label", "purpose": "Table headers, pills, nav items, in capitals. Never below 12px." }
+    },
+    "shadows": [
+      { "name": "card-lift", "value": "0 2px 6px rgba(0,0,0,0.12)", "purpose": "Standard content cards." },
+      { "name": "subtle", "value": "0 1px 2px rgba(0,0,0,0.05)", "purpose": "Form cards and small floating controls." },
+      { "name": "overlay", "value": "0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)", "purpose": "Dialogs, modals and dropdown menus only." }
+    ],
+    "motion": [
+      { "name": "colour-change", "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Hover and active colour changes on buttons and nav items." },
+      { "name": "drawer", "value": "300ms ease-in-out", "purpose": "Sidebar drawer slide, rail collapse and backdrop fade." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action colour: anything the user can press.",
+      "html": "<button class=\"ds-btn-primary\">Accept shift</button>",
+      "css": ".ds-btn-primary { background: #0050D3; color: #fff; padding: 10px 24px; border: none; border-radius: 8px; font: 700 14px/1.4 Geist, ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: #003FA7; } .ds-btn-primary:focus-visible { outline: 2px solid #003FA7; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive confirmations such as log out and delete.",
+      "html": "<button class=\"ds-btn-danger\">Log out</button>",
+      "css": ".ds-btn-danger { background: #FF0000; color: #fff; padding: 10px 24px; border: none; border-radius: 8px; font: 700 14px/1.4 Geist, ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-danger:hover { background: #D90000; } .ds-btn-danger:focus-visible { outline: 2px solid #B80000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "description": "Secondary actions next to a primary button.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { background: #fff; color: #0050D3; padding: 10px 24px; border: 1px solid #0050D3; border-radius: 8px; font: 700 14px/1.4 Geist, ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-outline:hover { background: #E6EFFD; } .ds-btn-outline:focus-visible { outline: 2px solid #003FA7; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Single-line field with a thin outline and a soft blue focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Shift name\" />",
+      "css": ".ds-input { width: 100%; background: #fff; border: 1px solid #E5E5E5; border-radius: 8px; padding: 12px 16px; font: 400 14px/1.5 Geist, ui-sans-serif, system-ui, sans-serif; color: #0A0A0A; } .ds-input::placeholder { color: #A3A3A3; } .ds-input:focus { outline: none; box-shadow: 0 0 0 1px rgba(0,63,167,0.6); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Navy rail with white outlined items; the active item fills white.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\" rx=\"1\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\" rx=\"1\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\" rx=\"1\"/></svg>DASHBOARD</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/></svg>WORKERS</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 24px; background: #012247; padding: 24px; width: 272px; } .ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #fff; border-radius: 8px; color: #fff; text-decoration: none; font: 500 14px/1.4 Geist, ui-sans-serif, system-ui, sans-serif; transition: background-color 150ms, color 150ms; } .ds-nav-item:hover, .ds-nav-active { background: #fff; color: #012247; } .ds-nav-item:focus-visible { outline: 2px solid #C9DAF8; outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "status-pill",
+      "description": "Round capital label; status colour on its own wash.",
+      "html": "<span class=\"ds-pill ds-pill-pending\">PENDING</span> <span class=\"ds-pill ds-pill-done\">ACCEPTED</span> <span class=\"ds-pill\">STATUS</span>",
+      "css": ".ds-pill { display: inline-block; border-radius: 9999px; padding: 2px 12px; background: #C9DAF8; color: #012247; font: 700 12px/1.3 Geist, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.02em; } .ds-pill-pending { background: #FEF3E6; color: #B86804; border: 1px solid #FD950F; } .ds-pill-done { background: #E3F4E6; color: #158240; border: 1px solid #1FAA59; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The pinned-up unit of the board.",
+      "html": "<section class=\"ds-card\"><div class=\"ds-card-head\"><h3>THIS WEEK</h3><a href=\"#\">View All</a></div><p>No upcoming shifts.</p></section>",
+      "css": ".ds-card { background: #fff; border: 1px solid #E5E5E5; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); font-family: Geist, ui-sans-serif, system-ui, sans-serif; max-width: 420px; } .ds-card-head { display: flex; justify-content: space-between; align-items: baseline; } .ds-card h3 { margin: 0; font-size: 18px; font-weight: 700; color: #012247; } .ds-card a { color: #0050D3; font-size: 14px; } .ds-card a:hover { color: #003FA7; } .ds-card p { color: #737373; font-size: 14px; margin: 16px 0 0; }"
+    },
+    {
+      "name": "Stat Tile",
+      "kind": "custom",
+      "description": "Icon, big number and capital caption, outlined in its status colour on its wash.",
+      "html": "<div class=\"ds-tiles\"><div class=\"ds-tile ds-tile-blue\"><span class=\"ds-tile-num\">2</span><span class=\"ds-tile-cap\">AVAILABLE</span></div><div class=\"ds-tile ds-tile-orange\"><span class=\"ds-tile-num\">0</span><span class=\"ds-tile-cap\">BUSY</span></div></div>",
+      "css": ".ds-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 280px; font-family: Geist, ui-sans-serif, system-ui, sans-serif; } .ds-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px; border-radius: 8px; border: 1px solid; } .ds-tile-num { font-size: 20px; font-weight: 800; color: #0B2A4A; } .ds-tile-cap { font-size: 12px; font-weight: 700; color: #0B2A4A; } .ds-tile-blue { background: #E6EFFD; border-color: #0050D3; } .ds-tile-orange { background: #FEF3E6; border-color: #FD950F; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shift Board",
+    "overview": "On Call Hub reads like the board on the shop wall: a dark navy frame, a white surface, and every shift pinned up where anyone can see whether it's covered. The design exists to show where a shift stands, at a glance, on a desktop for the owner and on a phone for a worker standing in a queue somewhere. Nothing here is decorative for its own sake; the one warm, playful note is the ice-cream photography and orange greeting on the dashboard hero.\n\nDensity is moderate. Content sits in rounded white cards with a thin grey outline and a soft lift, grouped into a single column on phones and two columns (main plus a narrow side rail) on desktop. Headings and labels are set in bold capitals so the board can be scanned from across the room; sentences stay in normal case so they can be read.\n\nColour carries meaning, not mood. Blue is what you press, orange is what you notice, green is done, red is a problem. Each status also gets a pale wash of its own hue so a whole card or row can be tinted without shouting.",
+    "keyCharacteristics": [
+      "Navy sidebar frame, white working canvas.",
+      "Rounded, outlined white cards with a soft shadow.",
+      "Bold capital headings and labels; normal-case sentences.",
+      "Status shown as colour plus a pale wash of the same hue.",
+      "One typeface (Geist) throughout."
+    ],
+    "rules": [
+      { "name": "The Blue Means Press Rule", "body": "Action Blue is the only colour for interactive elements. Orange, green and red never appear as a primary button fill; green and red appear on buttons only when the button *is* the status (Approve, Reject, Log out).", "section": "colors" },
+      { "name": "The Wash Pairing Rule", "body": "A status colour used as text or outline sits on its own pale wash, never on another hue's wash.", "section": "colors" },
+      { "name": "The Twelve Pixel Floor", "body": "No text is smaller than 12px. The incumbent 8–11px sizes are a known defect (OCH-225), not part of the system.", "section": "typography" },
+      { "name": "The Caps For Names Rule", "body": "Capitals are for headings, labels, nav items and status pills. Sentences, descriptions, error messages and notification text stay in normal case (OCH-226).", "section": "typography" },
+      { "name": "The One Lift Rule", "body": "A card gets the card lift or nothing; don't stack bigger shadows to make one card louder. Use a wash or an outline colour instead.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Action Blue for anything clickable, and only for that.",
+      "Do pair each status colour with its own wash (orange on orange-wash, green on green-wash, red on red-wash, blue on blue-wash).",
+      "Do put content in 12px-rounded white cards with a Hairline outline and the card lift.",
+      "Do keep all text at 12px or above.",
+      "Do set headings, labels, pills and nav items in bold capitals, and keep sentences in normal case.",
+      "Do keep the navy sidebar plus white canvas frame on every signed-in page.",
+      "Do meet WCAG 2.1 AA contrast; check status-colour text on white and on washes before shipping."
+    ],
+    "donts": [
+      "Don't use Scoop Orange, green or red as a primary button fill.",
+      "Don't set text below 12px (the incumbent 8–11px sizes are being removed in OCH-225).",
+      "Don't put whole sentences, error messages or notification text in capitals.",
+      "Don't introduce a second typeface.",
+      "Don't stack heavier shadows to emphasise a card; use a wash or outline colour.",
+      "Don't add new one-off hex colours; extend the palette here first."
+    ]
+  }
+}
