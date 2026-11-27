@@ -97,6 +97,8 @@ export async function respondToOffer(
   ) {
     return "Sorry, this shift has already been filled.";
   }
+  if (error.message.includes("already started"))
+    return "This shift has already started.";
   if (error.message.includes("not pending")) {
     return "This offer has expired or was already answered.";
   }
