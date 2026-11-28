@@ -22,9 +22,7 @@ export default function OwnerLayout({
         <Header />
 
         {/* Page Content */}
-        <div className="flex-1 w-full max-w-6xl mx-auto px-8 lg:px-12 pb-12">
-          {children}
-        </div>
+        <div className="flex-1 w-full px-4 lg:px-6 pb-12">{children}</div>
       </div>
     </main>
   );

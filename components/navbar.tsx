@@ -7,19 +7,19 @@ import Image from "next/image";
 export default async function Navbar() {
   const role = await getRole();
   return (
-    <nav className="w-full h-full flex flex-col gap-6 justify-start p-8 bg-[hsl(var(--dark-blue))]">
+    <nav className="w-full h-full flex flex-col gap-6 justify-start p-6 bg-[hsl(var(--dark-blue))]">
       <div className="flex flex-col items-center mb-5">
         <Image
           src="/pictures2/oncallHubLogo.png"
           alt="oncallHubLogo"
-          width={120}
-          height={120}
+          width={100}
+          height={100}
         />
         <Image
           src="/pictures2/logo_name.png"
           alt="oncallHubLogo"
-          width={250}
-          height={250}
+          width={150}
+          height={150}
         />
       </div>
       <NavbarLinks role={role as "owner" | "worker" | null} />

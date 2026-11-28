@@ -480,9 +480,9 @@ export default function OwnerDashboardPage() {
   const slide = HERO_SLIDES[slideIndex];
 
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+    <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_17.75rem]">
       {/* LEFT SIDE */}
-      <div className="flex min-w-0 flex-col gap-4 sm:gap-6 lg:col-span-2">
+      <div className="flex min-w-0 flex-col gap-4 sm:gap-6">
         {/* HERO BANNER */}
         <section
           style={{
