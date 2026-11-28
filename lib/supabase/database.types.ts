@@ -39,6 +39,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_records: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          is_late: boolean
+          shift_id: string
+          time_in: string
+          time_out: string | null
+          worker_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          is_late?: boolean
+          shift_id: string
+          time_in: string
+          time_out?: string | null
+          worker_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          is_late?: boolean
+          shift_id?: string
+          time_in?: string
+          time_out?: string | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "shift_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_cancellation_requests: {
         Row: {
           assignment_id: string
@@ -434,6 +489,8 @@ export type Database = {
           phone_number: string
         }[]
       }
+      record_time_in: { Args: never; Returns: Json }
+      record_time_out: { Args: never; Returns: Json }
       reject_cancellation_request: {
         Args: { p_note?: string; p_request_id: string }
         Returns: undefined
@@ -445,6 +502,10 @@ export type Database = {
       reserve_worker_invite: {
         Args: { owner_id: string; worker_email: string }
         Returns: boolean
+      }
+      station_login_email: {
+        Args: { p_employee_number: number }
+        Returns: string
       }
     }
     Enums: {
@@ -480,6 +541,7 @@ export type Database = {
         | "help.view.worker"
         | "document.view.all"
         | "worker.create"
+        | "attendance.record.own"
       app_role: "owner" | "worker"
     }
     CompositeTypes: {
@@ -643,6 +705,7 @@ export const Constants = {
         "help.view.worker",
         "document.view.all",
         "worker.create",
+        "attendance.record.own",
       ],
       app_role: ["owner", "worker"],
     },
