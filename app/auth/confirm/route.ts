@@ -4,11 +4,24 @@ import {type NextRequest} from "next/server";
 
 import {createClient} from "@/lib/supabase/server";
 
+function safeNext(value: string | null): string {
+	if (
+		!value?.startsWith("/") ||
+		value.startsWith("//") ||
+		value.startsWith("/\\") ||
+		/[\r\n\t]/.test(value)
+	) {
+		return "/";
+	}
+	// Location must be header-safe. Preserve URL delimiters and existing escapes.
+	return value.replace(/[^!-~]+/gu, encodeURIComponent);
+}
+
 export async function GET(request: NextRequest) {
 	const {searchParams} = new URL(request.url);
 	const token_hash = searchParams.get("token_hash");
 	const type = searchParams.get("type") as EmailOtpType | null;
-	const next = searchParams.get("next") ?? "/";
+	const next = safeNext(searchParams.get("next"));
 
 	if (token_hash && type) {
 		const supabase = await createClient();
