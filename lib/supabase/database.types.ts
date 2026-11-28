@@ -480,9 +480,9 @@ export type Database = {
           shift_id: string
           shift_name: string
           starts_at: string
-          time_in: string | null
-          time_out: string | null
-          worked_minutes: number | null
+          time_in: string
+          time_out: string
+          worked_minutes: number
           worker_id: string
           worker_name: string
         }[]

@@ -28,6 +28,7 @@ interface ShiftRow {
   notes?: string;
   status: string;
   startsAt: string;
+  endsAt: string;
 }
 
 interface CalendarShift {
@@ -724,7 +725,80 @@ function AddShiftForm({ onAdd }: { onAdd: (f: FormState) => Promise<void> }) {
   );
 }
 
-const GRID = "grid grid-cols-[191fr_220fr_213fr_185fr_146fr] items-center";
+const GRID =
+  "grid grid-cols-[1.1fr_1.4fr_1fr_1.3fr_1fr_0.9fr] items-center gap-2";
+
+const HEADERS = [
+  "Date",
+  "Time",
+  "Filled / Required",
+  "Task",
+  "Status",
+  "Actions",
+];
+
+// Colours and label for a row. A shift whose end time has passed is "Past".
+function rowTone(r: ShiftRow, now: number) {
+  if (r.status === "cancelled") {
+    return {
+      row: "bg-slate-100",
+      text: "text-slate-600",
+      pill: "border-slate-500",
+      label: "Cancelled",
+    };
+  }
+  if (r.status === "completed" || new Date(r.endsAt).getTime() < now) {
+    return {
+      row: "bg-slate-100",
+      text: "text-slate-700",
+      pill: "border-slate-500",
+      label: "Past",
+    };
+  }
+  if (r.status === "filled") {
+    return {
+      row: "bg-[#E3F2E7]",
+      text: "text-[#0E7A18]",
+      pill: "border-[#0E7A18]",
+      label: "Filled",
+    };
+  }
+  return {
+    row: "bg-[#FEF1E4]",
+    text: "text-[#B45309]",
+    pill: "border-[#B45309]",
+    label: "Open",
+  };
+}
+
+function ShiftActions({
+  row,
+  now,
+  onEdit,
+  onCancel,
+  className,
+}: {
+  row: ShiftRow;
+  now: number;
+  onEdit: (row: ShiftRow) => void;
+  onCancel: (row: ShiftRow) => void;
+  className: string;
+}) {
+  const editable =
+    (row.status === "open" || row.status === "filled") &&
+    new Date(row.endsAt).getTime() >= now;
+  if (!editable) return <span className={className} />;
+  return (
+    <span className={className}>
+      <button type="button" onClick={() => onEdit(row)} className="underline">
+        Edit
+      </button>
+      <button type="button" onClick={() => onCancel(row)} className="underline">
+        Cancel
+      </button>
+    </span>
+  );
+}
 
 function ShiftsTable({
   id,
@@ -732,6 +806,7 @@ function ShiftsTable({
   linkLabel,
   onLinkClick,
   rows,
+  now,
   onEdit,
   onCancel,
 }: {
@@ -740,12 +815,16 @@ function ShiftsTable({
   linkLabel: string;
   onLinkClick: () => void;
   rows: ShiftRow[];
+  now: number;
   onEdit: (row: ShiftRow) => void;
   onCancel: (row: ShiftRow) => void;
 }) {
   return (
-    <section id={id} className={`scroll-mt-6 px-7 py-6 ${card}`}>
-      <div className="flex items-start justify-between">
+    <section
+      id={id}
+      className={`min-w-0 scroll-mt-6 px-4 py-6 sm:px-7 ${card}`}
+    >
+      <div className="flex items-start justify-between gap-4">
         <h2
           className={`mt-3 text-[22px] font-bold uppercase leading-7 ${navy}`}
         >
@@ -760,21 +839,56 @@ function ShiftsTable({
         </button>
       </div>
 
-      <div className="mt-6 overflow-x-auto">
-        <div className="min-w-[52rem]">
-          {/* Table header */}
+      {rows.length === 0 && (
+        <p className="py-6 text-center text-sm text-slate-600">
+          No shifts yet.
+        </p>
+      )}
+
+      {/* Phones: one card per shift */}
+      <ul className="mt-6 flex flex-col gap-4 md:hidden">
+        {rows.map((r) => {
+          const tone = rowTone(r, now);
+          return (
+            <li
+              key={r.id}
+              className={`rounded-xl p-4 text-sm font-bold ${tone.row} ${tone.text}`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="uppercase">{r.task}</span>
+                <span
+                  className={`rounded-lg border-2 px-3 py-1 text-xs uppercase leading-none ${tone.pill}`}
+                >
+                  {tone.label}
+                </span>
+              </div>
+              <p className="mt-2">{fmtDate(r.date)}</p>
+              <p>
+                {fmtTime(r.start)} - {fmtTime(r.end)}
+              </p>
+              <p>
+                {r.filled}/{r.required} filled
+              </p>
+              <ShiftActions
+                row={r}
+                now={now}
+                onEdit={onEdit}
+                onCancel={onCancel}
+                className="mt-3 flex gap-4 text-xs"
+              />
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Tablets and desktops: table */}
+      <div className="mt-6 hidden overflow-x-auto md:block">
+        <div className="min-w-[48rem]">
           <div className={GRID}>
-            {[
-              "Date",
-              "Time",
-              "Filled / Required",
-              "Task",
-              "Status",
-              "Actions",
-            ].map((h) => (
+            {HEADERS.map((h) => (
               <span
                 key={h}
-                className={`justify-self-center whitespace-nowrap rounded-lg bg-[#C9DAF5] px-4 py-1 text-base font-bold uppercase ${navy}`}
+                className={`justify-self-center whitespace-nowrap rounded-lg bg-[#C9DAF5] px-3 py-1 text-sm font-bold uppercase ${navy}`}
               >
                 {h}
               </span>
@@ -782,35 +896,8 @@ function ShiftsTable({
           </div>
 
           <div className="mt-8 flex flex-col gap-8">
-            {rows.length === 0 && (
-              <p className="py-6 text-center text-sm text-slate-500">
-                No shifts yet.
-              </p>
-            )}
-
             {rows.map((r) => {
-              const tone =
-                r.status === "cancelled"
-                  ? {
-                      row: "bg-slate-100",
-                      text: "text-slate-500",
-                      pill: "border-slate-400",
-                      label: "Cancelled",
-                    }
-                  : r.status === "filled" || r.status === "completed"
-                    ? {
-                        row: "bg-[#E3F2E7]",
-                        text: "text-[#0E9A1E]",
-                        pill: "border-[#0E9A1E]",
-                        label: "Complete",
-                      }
-                    : {
-                        row: "bg-[#FEF1E4]",
-                        text: "text-[#FD950F]",
-                        pill: "border-[#FD950F]",
-                        label: "Pending",
-                      };
-
+              const tone = rowTone(r, now);
               return (
                 <div
                   key={r.id}
@@ -829,26 +916,13 @@ function ShiftsTable({
                   >
                     {tone.label}
                   </span>
-                  <span className="flex justify-center gap-3 text-xs normal-case">
-                    {r.status === "open" || r.status === "filled" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onEdit(r)}
-                          className="underline"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onCancel(r)}
-                          className="underline"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : null}
-                  </span>
+                  <ShiftActions
+                    row={r}
+                    now={now}
+                    onEdit={onEdit}
+                    onCancel={onCancel}
+                    className="flex justify-center gap-3 text-xs normal-case"
+                  />
                 </div>
               );
             })}
@@ -1108,6 +1182,7 @@ export default function OwnerShiftManagementPage() {
           notes: shift.notes ?? undefined,
           status: shift.status,
           startsAt: shift.starts_at,
+          endsAt: shift.ends_at,
         };
       }),
     );
@@ -1197,6 +1272,7 @@ export default function OwnerShiftManagementPage() {
             ?.scrollIntoView({ behavior: "smooth" })
         }
         rows={upcoming.slice(0, 2)}
+        now={loadedAt}
         onEdit={setEditing}
         onCancel={cancelShift}
       />
@@ -1209,6 +1285,7 @@ export default function OwnerShiftManagementPage() {
           linkLabel={showAllRows ? "Show Less" : "View All"}
           onLinkClick={() => setShowAllRows((v) => !v)}
           rows={showAllRows ? sorted : sorted.slice(0, 2)}
+          now={loadedAt}
           onEdit={setEditing}
           onCancel={cancelShift}
         />
