@@ -24,13 +24,15 @@ Built for one business, Frens Ice Cream, not a general scheduling product. Its c
 - The owner works at a desk between other shop tasks. Workers check offers on their phones, often away from work, and need to answer quickly.
 - All times are Philippine time (Asia/Manila).
 - Notifications in the app tell each side about offers, acceptances, declines, confirmations and cancellation requests.
-- The owner adds workers by invitation. A public sign-up page (`/auth/sign-up`) also exists; whether it should stay open is undecided.
+- Onboarding is invite-only: the owner invites a worker by email, and there is no public sign-up page (removed in OCH-212).
 
 ## Capabilities and Constraints
 
 - Owner: create and edit shifts, cancel shifts, see shift and offer status on a dashboard and calendar, approve or reject cancellation requests, invite, edit and deactivate workers, view worker detail.
 - Worker: accept or decline offers, view upcoming and past shifts, request cancellation of an accepted shift, edit profile details, photo and personal documents.
-- A deactivated worker can no longer sign in and is skipped by the queue.
+- A deactivated worker can no longer sign in, loses access even with a still-valid session, and is skipped by the queue. Their pending offers and accepted future shifts are withdrawn, and those shifts go back to the queue (OCH-210).
+- When the owner cancels a shift, every pending or accepted worker on it is released (OCH-199).
+- Approving a cancellation request only goes through if the shift and the worker's assignment still apply (OCH-211).
 - Profile photos and documents are kept in private storage.
 - Stack: Next.js (App Router) with Supabase for auth, database, row-level security and storage. Database changes go through SQL migrations.
 - Terminology in the UI: "shift", "offer", "cancellation request", "worker", "owner".
