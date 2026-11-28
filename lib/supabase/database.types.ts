@@ -458,15 +458,7 @@ export type Database = {
         Args: { p_note?: string; p_request_id: string }
         Returns: undefined
       }
-      can_invite_new_worker: {
-        Args: { owner_id: string; worker_email: string }
-        Returns: boolean
-      }
       cancel_shift: { Args: { p_shift_id: string }; Returns: undefined }
-      cancel_shift_offer: {
-        Args: { p_assignment_id: string }
-        Returns: undefined
-      }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       decline_shift_offer: {
         Args: { p_assignment_id: string }
