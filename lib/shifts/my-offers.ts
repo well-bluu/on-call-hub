@@ -104,25 +104,3 @@ export async function respondToOffer(
   }
   return "Something went wrong. Please try again.";
 }
-
-export async function cancelShift(assignmentId: string): Promise<string> {
-  const { error } = await createClient().rpc("cancel_shift_offer", {
-    p_assignment_id: assignmentId,
-  });
-
-  if (!error) return "Shift cancelled successfully.";
-
-  if (error.message.includes("not accepted")) {
-    return "This shift is not currently accepted.";
-  }
-
-  if (error.message.includes("not yours")) {
-    return "This shift is not available to cancel.";
-  }
-
-  if (error.message.includes("You are not allowed to cancel shift offers")) {
-    return "You are not allowed to cancel this shift.";
-  }
-
-  return "Something went wrong. Please try again.";
-}
