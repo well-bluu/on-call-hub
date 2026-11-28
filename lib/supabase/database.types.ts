@@ -470,6 +470,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_attendance: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          assignment_id: string
+          attendance_status: string
+          employee_number: number
+          ends_at: string
+          shift_id: string
+          shift_name: string
+          starts_at: string
+          time_in: string | null
+          time_out: string | null
+          worked_minutes: number | null
+          worker_id: string
+          worker_name: string
+        }[]
+      }
       list_workers: {
         Args: never
         Returns: {
@@ -534,6 +551,7 @@ export type Database = {
         | "document.view.all"
         | "worker.create"
         | "attendance.record.own"
+        | "attendance.view.all"
       app_role: "owner" | "worker"
     }
     CompositeTypes: {
@@ -698,6 +716,7 @@ export const Constants = {
         "document.view.all",
         "worker.create",
         "attendance.record.own",
+        "attendance.view.all",
       ],
       app_role: ["owner", "worker"],
     },
